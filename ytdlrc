@@ -1,0 +1,318 @@
+#!/usr/bin/env sh
+#
+#                             dP         dP dP
+#                             88         88 88
+#                  dP    dP d8888P .d888b88 88 88d888b. .d8888b.
+#                  88    88   88   88'  `88 88 88'  `88 88'  `""
+#                  88.  .88   88   88.  .88 88 88       88.  ...
+# .--------------- `8888P88   dP   `88888P8 dP dP       `88888P' --------------.
+# |::::::::::::::::......88 ::..::::.......:..:..::::::::......::::::::::::::::|
+# |:::::::::::::::::d8888P ::::::::::::::::::::::::::::::::::::::::::::::::::::|
+# |:::::::::::::::::......:::::::::::::::::::::::::::::::::::::::::::::::::::::|
+# |----------------------------------------------------------------------------|
+# |     file | ytdlrc                                                          |
+# |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
+# |   author | bardisty <b@bah.im>                                             |
+# |   source | https://github.com/bardisty/ytdlrc                              |
+# | modified | Sun Mar 19 2017 02:09:38 PDT -0700                              |
+# `----------------------------------------------------------------------------'
+
+
+# Enable debugging for verbose output
+#     * If this is `false` the script will only output errors
+debug=false
+
+# Working directory for the script
+ytdl_root_dir="${HOME}/ytdlrc"
+
+# Where to download files before moving them to the rclone remote
+ytdl_download_dir="${ytdl_root_dir%/}/stage"
+
+# List of URL's / channels / playlists to download, e.g.:
+#     * `ytuser:username`
+#     * `https://www.youtube.com/user/username`
+#     * `https://www.youtube.com/playlist?list=PLK9Sc5q_4K6aNajVLKtkaAB1JGmKyccf2`
+ytdl_snatch_list="${ytdl_root_dir%/}/snatch.list"
+
+# List of downloaded/processed files; prevents youtube-dl from
+# redownloading files that have already been moved to the rclone remote
+ytdl_archive_list="${ytdl_root_dir%/}/archive.list"
+
+# What video format(s) to grab
+ytdl_format="bestvideo+bestaudio"
+
+# Output template for downloaded filenames
+ytdl_output_template="%(uploader)s.%(upload_date)s.%(title)s.%(resolution)s.%(id)s.%(ext)s"
+
+# What value to grab from the first video in a playlist
+#     * This affects the directory hierarchy on the rclone remote, e.g.:
+#           `remote:archive/youtube/{playlist_title}/{downloaded files}`
+#     * The default value - `playlist_title` - will play well with YouTube
+#       usernames/channels (ytuser:username or URL to channel), as well as
+#       playlists containing videos from different uploaders. However it
+#       will not play well with individual YouTube video URL's, as these
+#       usually return "NA" as the playlist title. A value of `uploader`
+#       will play well with individual videos and entire channels but not
+#       with playlists containing videos from different uploaders.
+ytdl_video_value="playlist_title"
+
+# If `youtube-dl` is unable to pull `ytdl_video_value` from the video, use
+# this value instead
+ytdl_default_video_value="unknown"
+
+# By default, the directories videos are saved in have titlecase names, e.g.
+# `Some_Channel_Name`. Set to `true` if you prefer lowercase names.
+ytdl_lowercase_directories=false
+
+# Path to rclone config
+rclone_config="${HOME}/.rclone.conf"
+
+# Should we `copy` or `move` files?
+rclone_command="move"
+
+# Where to store downloaded files on the rclone remote
+rclone_destination="remote:archive/youtube"
+
+
+# ---------- You probably don't need to edit anything below this ----------
+
+
+# Where to store temp runtime files (FIFO and lock file)
+temp_file_dir="/tmp"
+
+# Where to store FIFO for reading the snatch list
+fifo="${temp_file_dir%/}/ytdlrc.fifo"
+
+# Where to store lock file to prevent the script from running more than once
+# at a time
+lock_file="${temp_file_dir%/}/ytdlrc.lock"
+
+# Prefix for printouts
+printout_prefix="[YTDLRC]"
+
+# Set `youtube-dl` and `rclone` command flags depending on debugging status
+if [ "$debug" = true ]; then
+  ytdl_debug_options="--verbose"
+  rclone_debug_options="-v --stats 1s"
+else
+  ytdl_debug_options="--quiet"
+  rclone_debug_options="-q"
+fi
+
+
+# POSIX-friendly variable printing
+say() {
+  printf %s\\n "${printout_prefix} ${1}"
+}
+
+
+# Turn `[ "$debug" = true ] && say "message"`
+# into `debug_say "message"`
+debug_say(){
+  if [ "$debug" = true ]; then
+    say "$1"
+  fi
+}
+
+
+# Get a value from the video (default is playlist_title) and store it in a
+# variable
+#     * Required to store videos on rclone remote in separate directories
+#       using the pulled value
+get_video_value() {
+  # Printout example: "Grabbing 'playlist_title' from 'ytuser:username'..."
+  debug_say "Grabbing '${1}' from '${2}'..."
+
+  video_value=$(
+    $ytdl_bin \
+      -4 \
+      --get-filename \
+      -o "%(${1})s" \
+      --playlist-items 1 \
+      --restrict-filenames \
+      "$2"
+  )
+
+  # Assign a default value if `youtube-dl` was unable to pull
+  # `playlist_title` from the video
+  video_value="${video_value:-$ytdl_default_video_value}"
+
+  if [ "$video_value" = "$ytdl_default_video_value" ]; then
+    # Printout example: "Unable to grab 'playlist_title' from '{url}'. Using
+    # default value 'unknown' instead."
+    debug_say "Unable to grab '${1}' from '${2}'. Using default value '${ytdl_default_video_value}' instead."
+  else
+    # Printout example: "'playlist_title' is 'Uploads_from_Some_Channel_Name'"
+    debug_say "'${1}' is '${video_value}'"
+  fi
+
+  # Trim off 'Uploads_from_' when returning titles of playlists that are just
+  # all the videos a user has uploaded
+  if [ "$ytdl_video_value" = "playlist_title" ]; then
+    string_to_trim="Uploads_from_"
+    if test "${video_value#*$string_to_trim}" != "$video_value"; then
+      # Printout example: "Trimming off 'Uploads_from_' from 'Uploads_from_Channel_Name'"
+      debug_say "Trimming off '${string_to_trim}' from '${video_value}'..."
+      video_value="$(printf %s\\n "$video_value"|sed 's/.*Uploads_from_//g')"
+      # Printout example: "New playlist_title is Channel_Name"
+      debug_say "New '${ytdl_video_value}' is '${video_value}'"
+    fi
+  fi
+
+  if [ "$ytdl_lowercase_directories" = true ]; then
+    # Printout example: "Converting Channel_Name to lowercase..."
+    debug_say "Converting ${video_value} to lowercase..."
+    video_value=$(printf %s\\n "$video_value"|tr '[:upper:]' '[:lower:]')
+    # Printout example: "New 'playlist_title' is 'channel_name'
+    debug_say "New '${ytdl_video_value}' is '${video_value}'"
+  fi
+}
+
+
+download_all_the_things() {
+  $ytdl_bin \
+    -4 \
+    --continue \
+    --download-archive "$ytdl_archive_list" \
+    --exec "$rclone_bin $rclone_command '{}' '${rclone_destination%/}/${video_value}' --config '$rclone_config' $rclone_debug_options" \
+    -f "$ytdl_format" \
+    --ignore-errors \
+    --no-overwrites \
+    -o "${ytdl_download_dir%/}/${video_value}/${ytdl_output_template}" \
+    --restrict-filenames \
+    --write-description \
+    --write-info-json \
+    --write-thumbnail \
+    --xattrs \
+    "$ytdl_debug_options" \
+    "$1"
+}
+
+
+# Catch CTRL-C; clean up temp files and exit script to prevent further
+# commands from executing
+trap 'rm "$lock_file" && rm "$fifo" && exit 0' 2
+
+
+# Check for `youtube-dl` command
+if command -v youtube-dl > /dev/null 2>&1; then
+  ytdl_bin=$(command -v youtube-dl)
+else
+  say "Error: \`youtube-dl\` command not found." >&2
+  exit 127
+fi
+
+
+# Check for `rclone` command
+if command -v rclone > /dev/null 2>&1; then
+  rclone_bin=$(command -v rclone)
+else
+  say "Error: \`rclone\` command not found." >&2
+  exit 127
+fi
+
+
+# Check for existence of lock file
+if [ -f "$lock_file" ]; then
+  # Lock file exists; do nothing
+  debug_say "Lock file exists: ${lock_file}"
+  debug_say "Exiting..."
+  exit 0
+else
+  # Lock file doesn't exist; create it
+  debug_say "Lock file doesn't exist. Attempting to create ${lock_file}..."
+  # Check if temp file directory exists
+  if [ -d "${temp_file_dir%/}" ]; then
+    # Temp file directory exists; attempt to create lock file
+    if touch "$lock_file"; then
+        debug_say "Creating '${lock_file}' succeeded. Continuing..."
+      else
+        say "Error: could not create lock file '${lock_file}'. Exiting..." >&2
+        exit 1
+      fi
+  else
+    # Temp file directory does not exist; attempt to create it
+    debug_say "Temp file directory '${temp_file_dir%/}' not found. Attempting to create it..."
+    if mkdir -p "${temp_file_dir%/}"; then
+      # Attempt to create lock file
+      debug_say "Creating '${temp_file_dir%/}' succeeded. Creating lock file..."
+      if touch "$lock_file"; then
+        debug_say "Creating '${lock_file}' succeeded. Continuing..."
+      else
+        say "Error: could not create lock file '${lock_file}'. Exiting..." >&2
+        exit 1
+      fi
+    else
+      say "Error: could not create temp directory '${temp_file_dir%/}'. Exiting..." >&2
+      exit 1
+    fi
+  fi
+fi
+
+
+# Generate required runtime directory and files if they don't already exist
+if [ ! -d "${ytdl_download_dir%/}" ]; then
+  debug_say "Creating download directory: ${ytdl_download_dir%/}"
+  if ! mkdir -p "${ytdl_download_dir%/}"; then
+    say "Error: could not create download directory '${ytdl_download_dir%/}'. Exiting..." >&2
+    exit 1
+  fi
+fi
+
+if [ ! -f "$ytdl_snatch_list" ]; then
+  debug_say "Creating snatch list: ${ytdl_snatch_list}"
+  if ! touch "$ytdl_snatch_list"; then
+    say "Error: could not create snatch list '${ytdl_snatch_list}'. Exiting..." >&2
+    exit 1
+  fi
+fi
+
+if [ ! -f "$ytdl_archive_list" ]; then
+  debug_say "Creating archive list: ${ytdl_archive_list}"
+  if ! touch "$ytdl_archive_list"; then
+    say "Error: could not create archive list '${ytdl_archive_list}'. Exiting..." >&2
+    exit 1
+  fi
+fi
+
+
+# Read through `ytdl_snatch_list` file only if it contains URL's /
+# usernames, assign each line to the `url` variable
+#     * We do this instead of using youtube-dl's `--batch-file` option in
+#       order to save playlist/channel names to a variable for an improved
+#       directory hierarchy on the rclone remote destination
+if [ -s "$ytdl_snatch_list" ]; then
+  mkfifo "$fifo"
+  grep -v '^ *#' < "$ytdl_snatch_list" > "$fifo" &
+  while IFS= read -r url; do
+    if [ -n "$url" ]; then
+      debug_say "Processing ${url}..."
+      get_video_value "$ytdl_video_value" "$url"
+      download_all_the_things "$url"
+
+      # youtube-dl's `--exec` option only processes the video file and not any
+      # metadata files (.json, .jpg, .description, etc.). `rclone` is executed
+      # again to ensure metadata gets moved to the rclone remote as well.
+      #     * The download directory check is to ensure we don't run `rclone`
+      #       unncessarily in the event no new videos/metadata are downloaded
+      if [ -d "${ytdl_download_dir%/}/${video_value}" ]; then
+        debug_say "Uploading metadata to rclone remote..."
+        $rclone_bin "$rclone_command" "${ytdl_download_dir%/}" "${rclone_destination%/}" \
+          --config "$rclone_config" --transfers 8 --checkers 16 \
+          $rclone_debug_options
+      fi
+
+      # Delete leftover download directory if it exists and if
+      # `rclone_command` is set to move
+      if [ -d "${ytdl_download_dir%/}/${video_value}" ] && [ "$rclone_command" = "move" ]; then
+        debug_say "Removing leftover download directory: ${ytdl_download_dir%/}/${video_value}"
+        rmdir "${ytdl_download_dir%/}/${video_value}"
+      fi
+    fi
+  done < "$fifo"
+  rm "$fifo"
+fi
+
+debug_say "Process complete. Removing lock file."
+rm "$lock_file"
+
