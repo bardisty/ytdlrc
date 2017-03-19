@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Sun Mar 19 2017 02:09:38 PDT -0700                              |
+# | modified | Sun Mar 19 2017 03:12:22 PDT -0700                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -93,7 +93,7 @@ printout_prefix="[YTDLRC]"
 # Set `youtube-dl` and `rclone` command flags depending on debugging status
 if [ "$debug" = true ]; then
   ytdl_debug_options="--verbose"
-  rclone_debug_options="-v --stats 1s"
+  rclone_debug_options="-vv --stats 1s"
 else
   ytdl_debug_options="--quiet"
   rclone_debug_options="-q"
