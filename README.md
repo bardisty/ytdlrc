@@ -7,65 +7,68 @@
 downloads videos and metadata via `youtube-dl` and moves each file on
 completion to an `rclone` remote, e.g. Amazon Drive.
 
-* Designed to be executed via cron job.
+*   Designed to be executed via cron job.
 
-* Ideal for use on VPS's with small disk space as it moves files on
-  completion rather than copying them. In testing I downloaded / uploaded
-  ~500GB of videos on a VPS with a 15GB SSD.
-  * This can easily be changed to keep the files if you have the disk space;
-    see the `rclone_command` variable to do so.
+*   Ideal for use on VPS's with small disk space as it moves files on
+    completion rather than copying them. In testing I downloaded / uploaded
+    ~500GB of videos on a VPS with a 15GB SSD.
 
-* Includes metadata (xattrs, \*.info.json, \*.description, \*.jpg).
+    *   This can easily be changed to keep the files if you have the disk
+        space; see the `rclone_command` variable to do so.
 
-* Reads a file named `snatch.list` to know which URL's / channels /
-  playlists you want to download and monitor for new videos.
-  * Lines beginning with `#` are ignored.
+*   Includes metadata (xattrs, \*.info.json, \*.description, \*.jpg).
 
-* Completed video ID's are saved in an file named `archive.list`; this
-  prevents `youtube-dl` from re-downloading videos that have already been
-  processed and moved to the rclone remote.
+*   Reads a file named `snatch.list` to know which URL's / channels /
+    playlists you want to download and monitor for new videos.
 
-* By default, it creates / uses the following structure:
+    *   Lines beginning with `#` are ignored.
 
-    - `~/ytdlrc/stage`           - download directory
-    - `~/ytdlrc/snatch.list`     - list of usernames / URL's to monitor / download
-    - `~/ytdlrc/archive.list`    - list of completed video ID's
+*   Completed video ID's are saved in an file named `archive.list`; this
+    prevents `youtube-dl` from re-downloading videos that have already been
+    processed and moved to the rclone remote.
 
-  These paths can be changed by modifying the `ytdl_*` variables.
+*   By default, it creates / uses the following structure:
 
-* In the download directory, subfolders are created for each line in the
-  `snatch.list`. The name of the subfolders depends on whether the processed
-  line is a playlist or a channel. This results in the following structure:
+    *   `~/ytdlrc/stage`           - download directory
+    *   `~/ytdlrc/snatch.list`     - list of usernames / URL's to monitor / download
+    *   `~/ytdlrc/archive.list`    - list of completed video ID's
 
-    - `~/ytdlrc/stage/Some_Channel_Name/{downloaded files}`
-    - `~/ytdlrc/stage/Another_Channel_Name/{downloaded files}`
-    - `~/ytdlrc/stage/Some_Playlist_Name/{downloaded files}`
-    - `~/ytdlrc/stage/Another_Playlist_Name/{downloaded files}`
+    These paths can be changed by modifying the `ytdl_*` variables.
 
-  Upon download completion a file is moved to the rclone remote, creating a
-  structure such as:
+*   In the download directory, subfolders are created for each line in the
+    `snatch.list`. The name of the subfolders depends on whether the
+    processed line is a playlist or a channel. This results in the following
+    structure:
 
-    - `remote:archive/youtube/Some_Channel_Name/{downloaded files}`
-    - `remote:archive/youtube/Another_Channel_Name/{downloaded files}`
-    - `remote:archive/youtube/Some_Playlist_Name/{downloaded files}`
-    - `remote:archive/youtube/Another_Playlist_Name/{downloaded files}`
+    *   `~/ytdlrc/stage/Some_Channel_Name/{downloaded files}`
+    *   `~/ytdlrc/stage/Another_Channel_Name/{downloaded files}`
+    *   `~/ytdlrc/stage/Some_Playlist_Name/{downloaded files}`
+    *   `~/ytdlrc/stage/Another_Playlist_Name/{downloaded files}`
 
-  The path before the channel / playlist names (`remote:archive/youtube`) is
-  set via the `rclone_destination` variable.
+    Upon download completion a file is moved to the rclone remote, creating
+    a structure such as:
 
-* Downloaded files are saved with the following output template:
+    *   `remote:archive/youtube/Some_Channel_Name/{downloaded files}`
+    *   `remote:archive/youtube/Another_Channel_Name/{downloaded files}`
+    *   `remote:archive/youtube/Some_Playlist_Name/{downloaded files}`
+    *   `remote:archive/youtube/Another_Playlist_Name/{downloaded files}`
 
-  `"%(uploader)s.%(upload_date)s.%(title)s.%(resolution)s.%(id)s.%(ext)s"`
+    The path before the channel / playlist names (`remote:archive/youtube`)
+    is set via the `rclone_destination` variable.
 
-  This results in filenames such as:
+*   Downloaded files are saved with the following output template:
 
-    - `Channel_Name.20170307.Video_Title.1920x1080.J---aiyznGQ.mp4`
-    - `Channel_Name.20170307.Video_Title.1920x1080.J---aiyznGQ.info.json`
-    - `Channel_Name.20170307.Video_Title.1920x1080.J---aiyznGQ.description`
-    - `Channel_Name.20170307.Video_Title.1920x1080.J---aiyznGQ.jpg`
+    `"%(uploader)s.%(upload_date)s.%(title)s.%(resolution)s.%(id)s.%(ext)s"`
 
-  See the `ytdl_output_template` variable if you wish to use a different
-  output template.
+    This results in filenames such as:
+
+    *   `Channel_Name.20170307.Video_Title.1920x1080.J---aiyznGQ.mp4`
+    *   `Channel_Name.20170307.Video_Title.1920x1080.J---aiyznGQ.info.json`
+    *   `Channel_Name.20170307.Video_Title.1920x1080.J---aiyznGQ.description`
+    *   `Channel_Name.20170307.Video_Title.1920x1080.J---aiyznGQ.jpg`
+
+    See the `ytdl_output_template` variable if you wish to use a different
+    output template.
 
 ## Example Output
 
@@ -137,7 +140,7 @@ Deleting original file /home/brian/ytdlrc/stage/Kurzgesagt_In_a_Nutshell/Kurzges
 2017/03/17 18:29:03 Encrypted amazon drive root 'crypt/i04dv4pst54cb73aviioosi6z0/itz12de1esv28z1fob78x6p5q3cp4tw1nboxe4g5u8nswp96qsnt': Modify window not supported
 2017/03/17 18:29:03 Encrypted amazon drive root 'crypt/i04dv4pst54cb73aviioosi6z0/itz12de1esv28z1fob78x6p5q3cp4tw1nboxe4g5u8nswp96qsnt': Waiting for checks to finish
 2017/03/17 18:29:03 Encrypted amazon drive root 'crypt/i04dv4pst54cb73aviioosi6z0/itz12de1esv28z1fob78x6p5q3cp4tw1nboxe4g5u8nswp96qsnt': Waiting for transfers to finish
-2017/03/17 18:29:04 
+2017/03/17 18:29:04
 Transferred:      0 Bytes (0 Bytes/s)
 Errors:                 0
 Checks:                 0
@@ -146,7 +149,7 @@ Elapsed time:        4.1s
 Transferring:
  * ...Become_Conscious.1920x1080.DHyUYg8X31c.mkv:  0% done, 0 Bytes/s, ETA: -
 
-2017/03/17 18:29:05 
+2017/03/17 18:29:05
 Transferred:   13.312 MBytes (2.590 MBytes/s)
 Errors:                 0
 Checks:                 0
@@ -155,7 +158,7 @@ Elapsed time:        5.1s
 Transferring:
  * ...Become_Conscious.1920x1080.DHyUYg8X31c.mkv: 13% done, 5.278 MBytes/s, ETA: 16s
 
-2017/03/17 18:29:06 
+2017/03/17 18:29:06
 Transferred:   41.312 MBytes (6.707 MBytes/s)
 Errors:                 0
 Checks:                 0
@@ -164,7 +167,7 @@ Elapsed time:        6.1s
 Transferring:
  * ...Become_Conscious.1920x1080.DHyUYg8X31c.mkv: 41% done, 6.744 MBytes/s, ETA: 8s
 
-2017/03/17 18:29:07 
+2017/03/17 18:29:07
 Transferred:   68.062 MBytes (9.532 MBytes/s)
 Errors:                 0
 Checks:                 0
@@ -173,7 +176,7 @@ Elapsed time:        7.1s
 Transferring:
  * ...Become_Conscious.1920x1080.DHyUYg8X31c.mkv: 68% done, 8.003 MBytes/s, ETA: 3s
 
-2017/03/17 18:29:08 
+2017/03/17 18:29:08
 Transferred:   95.500 MBytes (11.727 MBytes/s)
 Errors:                 0
 Checks:                 0
@@ -182,7 +185,7 @@ Elapsed time:        8.1s
 Transferring:
  * ...Become_Conscious.1920x1080.DHyUYg8X31c.mkv: 95% done, 9.293 MBytes/s, ETA: 0s
 
-2017/03/17 18:29:09 
+2017/03/17 18:29:09
 Transferred:   99.754 MBytes (10.913 MBytes/s)
 Errors:                 0
 Checks:                 0
@@ -193,7 +196,7 @@ Transferring:
 
 2017/03/17 18:29:21 Kurzgesagt_In_a_Nutshell.20170223.Do_Robots_Deserve_Rights_What_if_Machines_Become_Conscious.1920x1080.DHyUYg8X31c.mkv: Copied (new)
 2017/03/17 18:29:21 Kurzgesagt_In_a_Nutshell.20170223.Do_Robots_Deserve_Rights_What_if_Machines_Become_Conscious.1920x1080.DHyUYg8X31c.mkv: Deleted
-2017/03/17 18:29:21 
+2017/03/17 18:29:21
 Transferred:   99.754 MBytes (4.598 MBytes/s)
 Errors:                 0
 Checks:                 1
@@ -227,7 +230,7 @@ Deleting original file /home/brian/ytdlrc/stage/Kurzgesagt_In_a_Nutshell/Kurzges
 2017/03/17 18:29:29 Encrypted amazon drive root 'crypt/i04dv4pst54cb73aviioosi6z0/itz12de1esv28z1fob78x6p5q3cp4tw1nboxe4g5u8nswp96qsnt': Modify window not supported
 2017/03/17 18:29:29 Encrypted amazon drive root 'crypt/i04dv4pst54cb73aviioosi6z0/itz12de1esv28z1fob78x6p5q3cp4tw1nboxe4g5u8nswp96qsnt': Waiting for checks to finish
 2017/03/17 18:29:29 Encrypted amazon drive root 'crypt/i04dv4pst54cb73aviioosi6z0/itz12de1esv28z1fob78x6p5q3cp4tw1nboxe4g5u8nswp96qsnt': Waiting for transfers to finish
-2017/03/17 18:29:30 
+2017/03/17 18:29:30
 Transferred:   1.688 MBytes (617.097 kBytes/s)
 Errors:                 0
 Checks:                 0
@@ -236,7 +239,7 @@ Elapsed time:        2.8s
 Transferring:
  * ...How_To_Escape_It.1920x1080.RVMZxH1TIIQ.mkv:  1% done, 0 Bytes/s, ETA: -
 
-2017/03/17 18:29:31 
+2017/03/17 18:29:31
 Transferred:   21.062 MBytes (5.513 MBytes/s)
 Errors:                 0
 Checks:                 0
@@ -245,7 +248,7 @@ Elapsed time:        3.8s
 Transferring:
  * ...How_To_Escape_It.1920x1080.RVMZxH1TIIQ.mkv: 21% done, 3.614 MBytes/s, ETA: 21s
 
-2017/03/17 18:29:32 
+2017/03/17 18:29:32
 Transferred:   47.438 MBytes (9.882 MBytes/s)
 Errors:                 0
 Checks:                 0
@@ -254,7 +257,7 @@ Elapsed time:        4.8s
 Transferring:
  * ...How_To_Escape_It.1920x1080.RVMZxH1TIIQ.mkv: 47% done, 4.707 MBytes/s, ETA: 11s
 
-2017/03/17 18:29:33 
+2017/03/17 18:29:33
 Transferred:    79 MBytes (13.613 MBytes/s)
 Errors:                 0
 Checks:                 0
@@ -263,7 +266,7 @@ Elapsed time:        5.8s
 Transferring:
  * ...How_To_Escape_It.1920x1080.RVMZxH1TIIQ.mkv: 79% done, 6.243 MBytes/s, ETA: 3s
 
-2017/03/17 18:29:34 
+2017/03/17 18:29:34
 Transferred:   99.365 MBytes (14.612 MBytes/s)
 Errors:                 0
 Checks:                 0
@@ -424,47 +427,66 @@ uploads.
 
 ## Installation
 
-1. [Download](https://github.com/bardisty/ytdlrc/archive/master.zip) or clone the repository:
+1.  [Download](https://github.com/bardisty/ytdlrc/archive/master.zip) or
+    clone the repository:
 
-   `git clone https://github.com/bardisty/ytdlrc`
+    `git clone https://github.com/bardisty/ytdlrc`
 
-2. `cd` into the directory:
+2.  `cd` into the directory:
 
-   `cd ytdlrc`
+    `cd ytdlrc`
 
-3. Open `ytdlrc` in your text editor and see [Usage](#usage).
+3.  Open `ytdlrc` in your text editor and see [Usage](#usage).
 
 ## Usage
 
-1. Modify the `rclone_destination` variable with your rclone remote
-   destination path (default: `remote:archive/youtube`).
+1.  Modify the `rclone_destination` variable with your rclone remote
+    destination path, e.g.:
 
-2. Run the script once to generate the working directory, download
-   directory, snatch list, and archive list.
+    ```diff
+    - rclone_destination="remote:archive/youtube"
+    + rclone_destination="acd:archive/youtube"
+    ```
 
-3. Put the URL's / channels / playlists you want to download in the
-   `snatch.list` file, one per line, e.g.:
-      - `ytuser:username`
-      - `https://www.youtube.com/user/username`
-      - `https://www.youtube.com/playlist?list=PLK9Sc5q_4K6aNajVLKtkaAB1JGmKyccf2`
+2.  Run the script once to generate the working directory, download
+    directory, snatch list, and archive list.
 
-4. (Optional) Run the script once or twice with debugging enabled to ensure
-   everything is okie dokie; disable debugging when done.
+3.  Put the URL's / channels / playlists you want to download in the
+    `snatch.list` file, one per line, e.g.:
 
-5. Set up a cron job to execute the script hourly or however often you want.
-      - If you set up the cron job by moving the `ytdlrc` file to one of the
+    *   `ytuser:username`
+    *   `https://www.youtube.com/user/username`
+    *   `https://www.youtube.com/playlist?list=PLK9Sc5q_4K6aNajVLKtkaAB1JGmKyccf2`
+
+4.  (Optional) Run the script once or twice with debugging enabled to ensure
+    everything is okie dokie; disable debugging when done.
+
+5.  Set up a cron job to execute the script hourly or however often you
+    want.
+
+    *   If you set up the cron job by moving the `ytdlrc` file to one of the
         `/etc/cron.*/` directories, you may want to modify the
-        `rclone_config` variable with the path to your rclone config
-        (default: `$HOME/.rclone.conf`), otherwise it will look inside
-        `/root` for your config file. You may also want to modify the
-        `ytdl_root_dir` variable so runtime files aren't created inside
-        `/root`.
+        `rclone_config` variable with the path to your rclone config,
+        otherwise it will look inside `/root` for your config file:
+
+        ```diff
+        - rclone_config="${HOME}/.rclone.conf"
+        + rclone_config="/home/your-user/.rclone.conf"
+        ```
+
+        You may also want to modify the `ytdl_root_dir` variable so runtime
+        files aren't created inside `/root`:
+
+        ```diff
+        - ytdl_root_dir="${HOME}/ytdlrc"
+        + ytdl_root_dir="/home/your-user/ytdlrc"
+        ```
 
 ## Requirements
 
-* [coreutils](https://www.gnu.org/software/coreutils/coreutils.html)
-* [rclone](http://rclone.org/)
-* [youtube-dl](https://rg3.github.io/youtube-dl/)
+*   [coreutils](https://www.gnu.org/software/coreutils/coreutils.html)
+*   [rclone](http://rclone.org/)
+*   [youtube-dl](https://rg3.github.io/youtube-dl/)
 
 ## License
 
