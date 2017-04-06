@@ -7,6 +7,30 @@
 downloads videos and metadata via `youtube-dl` and moves each file on
 completion to an `rclone` remote, e.g. Amazon Drive.
 
+<details>
+  <summary>
+    <strong>Table of Contents</strong>
+  </summary>
+  <ul>
+    <li><a href="#about">About</a>
+    <li><a href="#example-output">Example Output</a>
+        <ul>
+          <li><a href="#example-initial-execution">Example: Initial execution
+          <li><a href="#example-downloading-all-videos-from-ytuserkurzgesagt">Example: Downloading all videos from ytuser:kurzgesagt
+            <ul>
+              <li><a href="#first-run">First run</a>
+              <li><a href="#second-run">Second run</a>
+            </ul>
+        </ul>
+    <li><a href="#installation">Installation</a>
+    <li><a href="#usage">Usage</a>
+    <li><a href="#requirements">Requirements</a>
+    <li><a href="#license">License</a>
+  </ul>
+</details>
+
+## About
+
 *   Designed to be executed via cron job.
 
 *   Ideal for use on VPS's with small disk space as it moves files on
@@ -89,7 +113,7 @@ These examples are what you see with `debug=true`.
 
 `ytuser:kurzgesagt` is the only line in our `snatch.list`.
 
-#### First Run
+#### First run
 
 ```
 [YTDLRC] Lock file doesn't exist. Attempting to create /tmp/ytdlrc.lock...
@@ -279,7 +303,7 @@ Transferring:
 This will continue until all videos / metadata are downloaded and moved to
 the rclone remote.
 
-#### Second Run
+#### Second run
 
 ```text
 [YTDLRC] Lock file doesn't exist. Creating lock file and continuing...
@@ -491,4 +515,3 @@ uploads.
 ## License
 
 [MIT](LICENSE)
-
