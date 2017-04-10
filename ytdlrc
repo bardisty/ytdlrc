@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Mon Apr 10 2017 10:47:15 PDT -0700                              |
+# | modified | Mon Apr 10 2017 10:58:18 PDT -0700                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -306,11 +306,16 @@ if [ -s "$ytdl_snatch_list" ]; then
           $rclone_debug_options
       fi
 
-      # Delete leftover download directory if it exists and if
-      # `rclone_command` is set to move
-      if [ -d "${ytdl_download_dir%/}/${video_value}" ] && [ "$rclone_command" = "move" ]; then
-        debug_say "Removing leftover download directory: ${ytdl_download_dir%/}/${video_value}"
-        rmdir "${ytdl_download_dir%/}/${video_value}"
+      # Delete leftover download directory if:
+      #   - it exists
+      #   - it doesn't contain any files
+      #   - `rclone_command` is set to move
+      if [ -d "${ytdl_download_dir%/}/${video_value}" ]; then
+        directory_contents=$(ls -ALq -- "${ytdl_download_dir%/}/${video_value}")
+        if [ "$rclone_command" = "move" ] && [ -z "$directory_contents" ]; then
+          debug_say "Removing leftover download directory: ${ytdl_download_dir%/}/${video_value}"
+          rmdir "${ytdl_download_dir%/}/${video_value}"
+        fi
       fi
     fi
   done < "$fifo"
