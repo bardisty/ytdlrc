@@ -5,7 +5,7 @@
 
 `ytdlrc` is a simple shell script wrapper for `youtube-dl` and `rclone`. It
 downloads videos and metadata via `youtube-dl` and moves each file on
-completion to an `rclone` remote, e.g. Amazon Drive.
+completion to an `rclone` remote, e.g. Google Drive.
 
 <details>
   <summary>
@@ -469,7 +469,7 @@ uploads.
 
     ```diff
     - rclone_destination="remote:archive/youtube"
-    + rclone_destination="acd:archive/youtube"
+    + rclone_destination="gdrive:archive/youtube"
     ```
 
 2.  Run the script once to generate the working directory, download
