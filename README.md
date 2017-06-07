@@ -47,7 +47,7 @@ completion to an `rclone` remote, e.g. Google Drive.
 
     *   Lines beginning with `#` are ignored.
 
-*   Completed video ID's are saved in an file named `archive.list`; this
+*   Completed video ID's are saved in a file named `archive.list`; this
     prevents `youtube-dl` from re-downloading videos that have already been
     processed and moved to the rclone remote.
 
