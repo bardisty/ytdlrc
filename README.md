@@ -31,7 +31,7 @@ completion to an `rclone` remote, e.g. Google Drive.
 
 ## About
 
-*   Designed to be executed via cron job.
+*   Designed to be executed via cron job or manually.
 
 *   Ideal for use on VPS's with small disk space as it moves files on
     completion rather than copying them. In testing I downloaded / uploaded
