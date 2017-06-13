@@ -305,7 +305,7 @@ if [ -s "$ytdl_snatch_list" ]; then
       # metadata files (.json, .jpg, .description, etc.). `rclone` is executed
       # again to ensure metadata gets moved to the rclone remote as well.
       #     * The download directory check is to ensure we don't run `rclone`
-      #       unncessarily in the event no new videos/metadata are downloaded
+      #       unnecessarily in the event no new videos/metadata are downloaded
       if [ -d "${ytdl_download_dir%/}/${video_value}" ]; then
         debug_say "Uploading metadata to rclone remote..."
         $rclone_bin "$rclone_command" "${ytdl_download_dir%/}" "${rclone_destination%/}" \
