@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Mon Apr 10 2017 10:58:18 PDT -0700                              |
+# | modified | Mon Jun 12 2017 19:38:24 PDT -0700                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -56,9 +56,20 @@ ytdl_output_template="%(uploader)s.%(upload_date)s.%(title)s.%(resolution)s.%(id
 #       with playlists containing videos from different uploaders.
 ytdl_video_value="playlist_title"
 
-# If `youtube-dl` is unable to pull `ytdl_video_value` from the video, use
-# this value instead
-ytdl_default_video_value="unknown"
+# If `youtube-dl` is unable to pull `ytdl_video_value` (default:
+# playlist_title) from the first video in a playlist, use this value instead
+#     * See the `ytdl_skip_on_fail` option if you would rather skip the
+#       playlist altogether so videos are never downloaded / uploaded into a
+#       directory that doesn't match the name of the playlist / channel
+ytdl_default_video_value="unknown-playlist"
+
+# Skip playlist if `youtube-dl` is unable to pull `ytdl_video_value`
+# (default: playlist_title) from the first video in a playlist
+#     * Set to `false` if you don't want to skip a playlist if `youtube-dl`
+#       fails to pull the `ytdl_video_value` (default: playlist_title).
+#       Instead, videos will be downloaded / uploaded into a directory named
+#       after `ytdl_default_video_value` (default: "unknown-playlist")
+ytdl_skip_on_fail=true
 
 # By default, the directories videos are saved in have titlecase names, e.g.
 # `Some_Channel_Name`. Set to `true` if you prefer lowercase names.
@@ -136,36 +147,6 @@ get_video_value() {
   # Assign a default value if `youtube-dl` was unable to pull
   # `playlist_title` from the video
   video_value="${video_value:-$ytdl_default_video_value}"
-
-  if [ "$video_value" = "$ytdl_default_video_value" ]; then
-    # Printout example: "Unable to grab 'playlist_title' from '{url}'. Using
-    # default value 'unknown' instead."
-    debug_say "Unable to grab '${1}' from '${2}'. Using default value '${ytdl_default_video_value}' instead."
-  else
-    # Printout example: "'playlist_title' is 'Uploads_from_Some_Channel_Name'"
-    debug_say "'${1}' is '${video_value}'"
-  fi
-
-  # Trim off 'Uploads_from_' when returning titles of playlists that are just
-  # all the videos a user has uploaded
-  if [ "$ytdl_video_value" = "playlist_title" ]; then
-    string_to_trim="Uploads_from_"
-    if test "${video_value#*$string_to_trim}" != "$video_value"; then
-      # Printout example: "Trimming off 'Uploads_from_' from 'Uploads_from_Channel_Name'"
-      debug_say "Trimming off '${string_to_trim}' from '${video_value}'..."
-      video_value="$(printf %s\\n "$video_value"|sed 's/.*Uploads_from_//g')"
-      # Printout example: "New playlist_title is Channel_Name"
-      debug_say "New '${ytdl_video_value}' is '${video_value}'"
-    fi
-  fi
-
-  if [ "$ytdl_lowercase_directories" = true ]; then
-    # Printout example: "Converting Channel_Name to lowercase..."
-    debug_say "Converting ${video_value} to lowercase..."
-    video_value=$(printf %s\\n "$video_value"|tr '[:upper:]' '[:lower:]')
-    # Printout example: "New 'playlist_title' is 'channel_name'
-    debug_say "New '${ytdl_video_value}' is '${video_value}'"
-  fi
 }
 
 
@@ -299,6 +280,51 @@ if [ -s "$ytdl_snatch_list" ]; then
     if [ -n "$url" ]; then
       debug_say "Processing ${url}..."
       get_video_value "$ytdl_video_value" "$url"
+
+      if [ "$video_value" = "$ytdl_default_video_value" ]; then
+        # Failed to grab video value, try again before proceeding...
+        get_video_value "$ytdl_video_value" "$url"
+        if [ "$video_value" = "$ytdl_default_video_value" ]; then
+          # Failed again, if true skip, if false continue with the default
+          # value (`ytdl_default_video_value`)
+          if [ "$ytdl_skip_on_fail" = true ]; then
+            debug_say "Failed to grab ${ytdl_video_value} after 2 attempts. Skipping..."
+            continue
+          else
+            # Printout example: "Unable to grab 'playlist_title' from '{url}'. Using
+            # default value 'unknown-playlist' instead."
+            debug_say "Unable to grab '${ytdl_video_value}' from '${url}'. Using default value '${ytdl_default_video_value}' instead."
+          fi
+        fi
+      fi
+
+      # Process value returned by `get_video_value()`
+      if [ "$video_value" != "$ytdl_default_video_value" ]; then
+        # Printout example: "'playlist_title' is 'Uploads_from_Some_Channel_Name'"
+        debug_say "'${ytdl_video_value}' is '${video_value}'"
+
+        # Trim off 'Uploads_from_' when returning titles of playlists that are just
+        # all the videos a user has uploaded
+        if [ "$ytdl_video_value" = "playlist_title" ]; then
+          string_to_trim="Uploads_from_"
+          if test "${video_value#*$string_to_trim}" != "$video_value"; then
+            # Printout example: "Trimming off 'Uploads_from_' from 'Uploads_from_Channel_Name'"
+            debug_say "Trimming off '${string_to_trim}' from '${video_value}'..."
+            video_value="$(printf %s\\n "$video_value"|sed 's/.*Uploads_from_//g')"
+            # Printout example: "New playlist_title is Channel_Name"
+            debug_say "New '${ytdl_video_value}' is '${video_value}'"
+          fi
+        fi
+
+        if [ "$ytdl_lowercase_directories" = true ]; then
+          # Printout example: "Converting Channel_Name to lowercase..."
+          debug_say "Converting ${video_value} to lowercase..."
+          video_value=$(printf %s\\n "$video_value"|tr '[:upper:]' '[:lower:]')
+          # Printout example: "New 'playlist_title' is 'channel_name'
+          debug_say "New '${ytdl_video_value}' is '${video_value}'"
+        fi
+      fi
+
       download_all_the_things "$url"
 
       # youtube-dl's `--exec` option only processes the video file and not any
