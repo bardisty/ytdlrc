@@ -513,6 +513,7 @@ uploads.
 ## Requirements
 
 *   [coreutils](https://www.gnu.org/software/coreutils/coreutils.html)
+*   [ffmpeg](https://ffmpeg.org/)
 *   [rclone](http://rclone.org/)
 *   [youtube-dl](https://rg3.github.io/youtube-dl/)
 
