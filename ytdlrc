@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Mon Jun 12 2017 19:38:24 PDT -0700                              |
+# | modified | Mon Jun 12 2017 19:47:15 PDT -0700                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -288,7 +288,7 @@ if [ -s "$ytdl_snatch_list" ]; then
           # Failed again, if true skip, if false continue with the default
           # value (`ytdl_default_video_value`)
           if [ "$ytdl_skip_on_fail" = true ]; then
-            debug_say "Failed to grab ${ytdl_video_value} after 2 attempts. Skipping..."
+            debug_say "Failed to grab '${ytdl_video_value}' from '${url}' after 2 attempts. Skipping..."
             continue
           else
             # Printout example: "Unable to grab 'playlist_title' from '{url}'. Using
