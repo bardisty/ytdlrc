@@ -510,6 +510,14 @@ uploads.
         + ytdl_root_dir="/home/your-user/ytdlrc"
         ```
 
+6. (Optional) Commit your configuration changes so you can easily remain
+   updated with the upstream version of the script:
+
+   `git commit -m "Modify options to my taste"`
+
+   To update the script to the latest version simply run `git pull` and
+   merge any changes.
+
 ## Requirements
 
 *   [coreutils](https://www.gnu.org/software/coreutils/coreutils.html)
