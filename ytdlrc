@@ -216,6 +216,13 @@ else
 fi
 
 
+# Check for `ffmpeg` command
+if ! command -v ffmpeg > /dev/null 2>&1; then
+  say "Error: \`ffmpeg\` command not found." >&2
+  exit 127
+fi
+
+
 # Check for existence of lock file
 if [ -f "$lock_file" ]; then
   # Lock file exists; do nothing
