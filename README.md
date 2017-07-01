@@ -54,7 +54,7 @@ completion to an `rclone` remote, e.g. Google Drive.
 *   By default, it creates / uses the following structure:
 
     *   `~/ytdlrc/stage`           - download directory
-    *   `~/ytdlrc/snatch.list`     - list of usernames / URL's to monitor / download
+    *   `~/ytdlrc/snatch.list`     - list of usernames or URL's to monitor / download
     *   `~/ytdlrc/archive.list`    - list of completed video ID's
 
     These paths can be changed by modifying the `ytdl_*` variables.
