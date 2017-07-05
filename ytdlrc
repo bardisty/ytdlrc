@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Sun Jun 25 2017 05:12:59 PDT -0700                              |
+# | modified | Wed Jul 05 2017 16:15:00 PDT -0700                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -119,10 +119,21 @@ say() {
 
 # Turn `[ "$debug" = true ] && say "message"`
 # into `debug_say "message"`
-debug_say(){
+debug_say() {
   if [ "$debug" = true ]; then
     say "$1"
   fi
+}
+
+
+# Determine if a directory is empty
+# Source: http://www.etalabs.net/sh_tricks.html
+is_empty() {
+  cd "$1" || return 0
+  set -- .[!.]* ; test -f "$1" && return 1
+  set -- ..?* ; test -f "$1" && return 1
+  set -- * ; test -f "$1" && return 1
+  return 0
 }
 
 
