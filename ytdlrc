@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Wed Jul 05 2017 16:15:00 PDT -0700                              |
+# | modified | Wed Jul 05 2017 16:24:03 PDT -0700                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -349,7 +349,8 @@ if [ -s "$ytdl_snatch_list" ]; then
       # again to ensure metadata gets moved to the rclone remote as well.
       #     * The download directory check is to ensure we don't run `rclone`
       #       unnecessarily in the event no new videos/metadata are downloaded
-      if [ -d "${ytdl_download_dir%/}/${video_value}" ]; then
+      download_directory="${ytdl_download_dir%/}/${video_value}"
+      if [ -d "$download_directory" ]; then
         debug_say "Uploading metadata to rclone remote..."
         $rclone_bin "$rclone_command" "${ytdl_download_dir%/}" "${rclone_destination%/}" \
           --config "$rclone_config" --transfers 8 --checkers 16 \
@@ -360,13 +361,11 @@ if [ -s "$ytdl_snatch_list" ]; then
       #   - it exists
       #   - it doesn't contain any files
       #   - `rclone_command` is set to move
-      if [ -d "${ytdl_download_dir%/}/${video_value}" ]; then
-        directory_contents=$(ls -ALq -- "${ytdl_download_dir%/}/${video_value}")
-        if [ "$rclone_command" = "move" ] && [ -z "$directory_contents" ]; then
-          debug_say "Removing leftover download directory: ${ytdl_download_dir%/}/${video_value}"
-          rmdir "${ytdl_download_dir%/}/${video_value}"
-        fi
+      if [ -d "$download_directory" ] && is_empty "$download_directory" && [ "$rclone_command" = "move" ]; then
+        debug_say "Removing leftover download directory: ${download_directory}"
+        rmdir "$download_directory"
       fi
+
     fi
   done < "$fifo"
   rm "$fifo"
