@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Wed Jul 05 2017 16:24:03 PDT -0700                              |
+# | modified | Sun Jul 09 2017 22:03:34 PDT -0700                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -328,14 +328,14 @@ if [ -s "$ytdl_snatch_list" ]; then
             # Printout example: "Trimming off 'Uploads_from_' from 'Uploads_from_Channel_Name'"
             debug_say "Trimming off '${string_to_trim}' from '${video_value}'..."
             video_value="$(printf %s\\n "$video_value"|sed 's/.*Uploads_from_//g')"
-            # Printout example: "New playlist_title is Channel_Name"
+            # Printout example: "New 'playlist_title' is 'Channel_Name'"
             debug_say "New '${ytdl_video_value}' is '${video_value}'"
           fi
         fi
 
         if [ "$ytdl_lowercase_directories" = true ]; then
-          # Printout example: "Converting Channel_Name to lowercase..."
-          debug_say "Converting ${video_value} to lowercase..."
+          # Printout example: "Converting 'Channel_Name' to lowercase..."
+          debug_say "Converting '${video_value}' to lowercase..."
           video_value=$(printf %s\\n "$video_value"|tr '[:upper:]' '[:lower:]')
           # Printout example: "New 'playlist_title' is 'channel_name'
           debug_say "New '${ytdl_video_value}' is '${video_value}'"
