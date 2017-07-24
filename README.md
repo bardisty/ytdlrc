@@ -489,8 +489,10 @@ uploads.
     *   `https://www.youtube.com/user/username`
     *   `https://www.youtube.com/playlist?list=PLK9Sc5q_4K6aNajVLKtkaAB1JGmKyccf2`
 
-4.  (Optional) Run the script once or twice with debugging enabled to ensure
-    everything is okie dokie; disable debugging when done.
+4.  *(Optional / Recommended)* Run the script once or twice with debugging
+    enabled to ensure everything is okie dokie. Disable debugging when done
+    if you don't want `ytdlrc` to spam your system log when executed via
+    cron.
 
 5.  Set up a cron job to execute the script hourly or however often you
     want, e.g.:
