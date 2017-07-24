@@ -477,12 +477,9 @@ uploads.
 
     ```text
     $ ./ytdlrc
-    [YTDLRC] Lock file doesn't exist. Attempting to create /tmp/ytdlrc.lock...
-    [YTDLRC] Creating '/tmp/ytdlrc.lock' succeeded. Continuing...
     [YTDLRC] Creating download directory: /home/brian/ytdlrc/stage
     [YTDLRC] Creating snatch list: /home/brian/ytdlrc/snatch.list
     [YTDLRC] Creating archive list: /home/brian/ytdlrc/archive.list
-    [YTDLRC] Process complete. Removing lock file.
     ```
 
 3.  Put the URL's / channels / playlists you want to download in the
