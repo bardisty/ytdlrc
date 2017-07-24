@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Mon Jul 24 2017 12:01:54 PDT -0700                              |
+# | modified | Mon Jul 24 2017 12:49:50 PDT -0700                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -103,11 +103,13 @@ rclone_destination="remote:archive/youtube"
 
 
 # Colors for info / error printouts
-if command -v tput > /dev/null 2>&1; then
-  text_reset=$(tput sgr0)
-  text_bold=$(tput bold)
-  text_red=$(tput setaf 1)
-  text_yellow=$(tput setaf 3)
+if tty > /dev/null 2>&1; then
+  if command -v tput > /dev/null 2>&1; then
+    text_reset=$(tput sgr0)
+    text_bold=$(tput bold)
+    text_red=$(tput setaf 1)
+    text_yellow=$(tput setaf 3)
+  fi
 fi
 
 # Where to store temp runtime files (FIFO and lock file)
