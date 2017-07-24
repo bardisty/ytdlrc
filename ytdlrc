@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Sun Jul 09 2017 22:03:34 PDT -0700                              |
+# | modified | Mon Jul 24 2017 10:56:21 PDT -0700                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -260,7 +260,7 @@ fi
 
 # Generate required runtime directory and files if they don't already exist
 if [ ! -d "${ytdl_download_dir%/}" ]; then
-  debug_say "Creating download directory: ${ytdl_download_dir%/}"
+  say "Creating download directory: ${ytdl_download_dir%/}"
   if ! mkdir -p "${ytdl_download_dir%/}"; then
     say "Error: could not create download directory '${ytdl_download_dir%/}'. Exiting..." >&2
     exit 1
@@ -268,7 +268,7 @@ if [ ! -d "${ytdl_download_dir%/}" ]; then
 fi
 
 if [ ! -f "$ytdl_snatch_list" ]; then
-  debug_say "Creating snatch list: ${ytdl_snatch_list}"
+  say "Creating snatch list: ${ytdl_snatch_list}"
   if ! touch "$ytdl_snatch_list"; then
     say "Error: could not create snatch list '${ytdl_snatch_list}'. Exiting..." >&2
     exit 1
@@ -276,7 +276,7 @@ if [ ! -f "$ytdl_snatch_list" ]; then
 fi
 
 if [ ! -f "$ytdl_archive_list" ]; then
-  debug_say "Creating archive list: ${ytdl_archive_list}"
+  say "Creating archive list: ${ytdl_archive_list}"
   if ! touch "$ytdl_archive_list"; then
     say "Error: could not create archive list '${ytdl_archive_list}'. Exiting..." >&2
     exit 1
