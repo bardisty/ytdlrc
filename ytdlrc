@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Mon Jul 24 2017 10:56:21 PDT -0700                              |
+# | modified | Mon Jul 24 2017 11:13:35 PDT -0700                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -88,6 +88,14 @@ rclone_destination="remote:archive/youtube"
 # ---------- You probably don't need to edit anything below this ----------
 
 
+# Colors for info / error printouts
+if command -v tput > /dev/null 2>&1; then
+  text_reset=$(tput sgr0)
+  text_bold=$(tput bold)
+  text_red=$(tput setaf 1)
+  text_yellow=$(tput setaf 3)
+fi
+
 # Where to store temp runtime files (FIFO and lock file)
 temp_file_dir="/tmp"
 
@@ -98,8 +106,11 @@ fifo="${temp_file_dir%/}/ytdlrc.fifo"
 # at a time
 lock_file="${temp_file_dir%/}/ytdlrc.lock"
 
-# Prefix for printouts
-printout_prefix="[YTDLRC]"
+# Prefix for all printouts
+printout_prefix="${text_bold}${text_yellow}[YTDLRC]${text_reset}"
+
+# Prefix for error printouts
+printout_prefix_error="${text_bold}${text_red}Error:${text_reset}"
 
 # Set `youtube-dl` and `rclone` command flags depending on debugging status
 if [ "$debug" = true ]; then
@@ -123,6 +134,12 @@ debug_say() {
   if [ "$debug" = true ]; then
     say "$1"
   fi
+}
+
+
+# Error printouts
+error_say() {
+  say "${printout_prefix_error} ${1}"
 }
 
 
@@ -199,7 +216,7 @@ trap 'rm "$lock_file" && rm "$fifo" && exit 0' 2
 if command -v youtube-dl > /dev/null 2>&1; then
   ytdl_bin=$(command -v youtube-dl)
 else
-  say "Error: \`youtube-dl\` command not found." >&2
+  error_say "\`youtube-dl\` command not found." >&2
   exit 127
 fi
 
@@ -208,14 +225,14 @@ fi
 if command -v rclone > /dev/null 2>&1; then
   rclone_bin=$(command -v rclone)
 else
-  say "Error: \`rclone\` command not found." >&2
+  error_say "\`rclone\` command not found." >&2
   exit 127
 fi
 
 
 # Check for `ffmpeg` command
 if ! command -v ffmpeg > /dev/null 2>&1; then
-  say "Error: \`ffmpeg\` command not found." >&2
+  error_say "\`ffmpeg\` command not found." >&2
   exit 127
 fi
 
@@ -235,7 +252,7 @@ else
     if touch "$lock_file"; then
         debug_say "Creating '${lock_file}' succeeded. Continuing..."
       else
-        say "Error: could not create lock file '${lock_file}'. Exiting..." >&2
+        error_say "could not create lock file '${lock_file}'. Exiting..." >&2
         exit 1
       fi
   else
@@ -247,11 +264,11 @@ else
       if touch "$lock_file"; then
         debug_say "Creating '${lock_file}' succeeded. Continuing..."
       else
-        say "Error: could not create lock file '${lock_file}'. Exiting..." >&2
+        error_say "could not create lock file '${lock_file}'. Exiting..." >&2
         exit 1
       fi
     else
-      say "Error: could not create temp directory '${temp_file_dir%/}'. Exiting..." >&2
+      error_say "could not create temp directory '${temp_file_dir%/}'. Exiting..." >&2
       exit 1
     fi
   fi
@@ -262,7 +279,7 @@ fi
 if [ ! -d "${ytdl_download_dir%/}" ]; then
   say "Creating download directory: ${ytdl_download_dir%/}"
   if ! mkdir -p "${ytdl_download_dir%/}"; then
-    say "Error: could not create download directory '${ytdl_download_dir%/}'. Exiting..." >&2
+    error_say "could not create download directory '${ytdl_download_dir%/}'. Exiting..." >&2
     exit 1
   fi
 fi
@@ -270,7 +287,7 @@ fi
 if [ ! -f "$ytdl_snatch_list" ]; then
   say "Creating snatch list: ${ytdl_snatch_list}"
   if ! touch "$ytdl_snatch_list"; then
-    say "Error: could not create snatch list '${ytdl_snatch_list}'. Exiting..." >&2
+    error_say "could not create snatch list '${ytdl_snatch_list}'. Exiting..." >&2
     exit 1
   fi
 fi
@@ -278,7 +295,7 @@ fi
 if [ ! -f "$ytdl_archive_list" ]; then
   say "Creating archive list: ${ytdl_archive_list}"
   if ! touch "$ytdl_archive_list"; then
-    say "Error: could not create archive list '${ytdl_archive_list}'. Exiting..." >&2
+    error_say "could not create archive list '${ytdl_archive_list}'. Exiting..." >&2
     exit 1
   fi
 fi
