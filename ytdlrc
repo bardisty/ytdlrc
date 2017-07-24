@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Mon Jul 24 2017 11:13:35 PDT -0700                              |
+# | modified | Mon Jul 24 2017 12:01:54 PDT -0700                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -43,6 +43,20 @@ ytdl_format="bestvideo+bestaudio"
 
 # Output template for downloaded filenames
 ytdl_output_template="%(uploader)s.%(upload_date)s.%(title)s.%(resolution)s.%(id)s.%(ext)s"
+
+# Download and embed subtitles?
+ytdl_embed_subtitles=true
+
+# Download and embed automatic captions?
+#     * Requires `ytdl_embed_subtitles=true`
+ytdl_embed_automatic_captions=true
+
+# What subtitle format to use for embedded subtitles
+ytdl_subtitle_format="srt/best"
+
+# What subtitle languages to download and embed (separated by commas)
+#     * Use `youtube-dl --list-subs` to view available language tags
+ytdl_subtitle_lang="en"
 
 # What value to grab from the first video in a playlist
 #     * This affects the directory hierarchy on the rclone remote, e.g.:
@@ -121,6 +135,17 @@ else
   rclone_debug_options="-q"
 fi
 
+# Set `youtube-dl` options for embedded subtitles
+if [ "$ytdl_embed_subtitles" = true ]; then
+  ytdl_subtitle_options="--embed-subs --sub-format \"$ytdl_subtitle_format\" --sub-lang \"$ytdl_subtitle_lang\" --write-sub"
+
+  # Set `youtube-dl` options for automatic captions
+  if [ "$ytdl_embed_automatic_captions" = true ]; then
+    ytdl_automatic_caption_options="--write-auto-sub"
+  fi
+fi
+
+
 
 # POSIX-friendly variable printing
 say() {
@@ -183,7 +208,6 @@ download_all_the_things() {
     -4 \
     --continue \
     --download-archive "$ytdl_archive_list" \
-    --embed-subs \
     --exec "$rclone_bin $rclone_command \
       '{}' '${rclone_destination%/}/${video_value}' \
       --config '$rclone_config' \
@@ -194,15 +218,13 @@ download_all_the_things() {
     --no-overwrites \
     -o "${ytdl_download_dir%/}/${video_value}/${ytdl_output_template}" \
     --restrict-filenames \
-    --sub-format "srt/best" \
-    --sub-lang "en" \
-    --write-auto-sub \
     --write-description \
     --write-info-json \
-    --write-sub \
     --write-thumbnail \
     --xattrs \
     "$ytdl_debug_options" \
+    $ytdl_subtitle_options \
+    $ytdl_automatic_caption_options \
     "$1"
 }
 
