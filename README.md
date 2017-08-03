@@ -519,7 +519,7 @@ uploads.
         + ytdl_root_dir="/home/your-user/ytdlrc"
         ```
 
-6. (Optional) Commit your configuration changes so you can easily remain
+6. *(Optional)* Commit your configuration changes so you can easily remain
    updated with the upstream version of the script:
 
    ```
