@@ -335,7 +335,7 @@ if [ -s "$ytdl_snatch_list" ]; then
   grep -v '^ *#' < "$ytdl_snatch_list" > "$fifo" &
   while IFS= read -r url; do
     if [ -n "$url" ]; then
-      debug_say "Processing ${url}..."
+      say "Processing ${url}..."
       get_video_value "$ytdl_video_value" "$url"
 
       if [ "$video_value" = "$ytdl_default_video_value" ]; then
@@ -412,6 +412,6 @@ if [ -s "$ytdl_snatch_list" ]; then
   rm "$fifo"
 fi
 
-debug_say "Process complete. Removing lock file."
+say "Process complete. Removing lock file."
 rm "$lock_file"
 

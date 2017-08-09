@@ -480,6 +480,7 @@ uploads.
     [YTDLRC] Creating download directory: /home/brian/ytdlrc/stage
     [YTDLRC] Creating snatch list: /home/brian/ytdlrc/snatch.list
     [YTDLRC] Creating archive list: /home/brian/ytdlrc/archive.list
+    [YTDLCR] Process complete. Removing lock file.
     ```
 
 3.  Put the URL's / channels / playlists you want to download in the
