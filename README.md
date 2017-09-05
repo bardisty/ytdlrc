@@ -464,7 +464,12 @@ uploads.
 
 ## Usage
 
-1.  Modify the `rclone_destination` variable with your rclone remote
+1.  Ensure the path to your rclone configuration file is correct or modify
+    it if need be:
+
+    `rclone_config="${HOME}/.config/rclone/rclone.conf"`
+
+2.  Modify the `rclone_destination` variable with your rclone remote
     destination path, e.g.:
 
     ```diff
@@ -472,7 +477,7 @@ uploads.
     + rclone_destination="gdrive:archive/youtube"
     ```
 
-2.  Run the script once to generate the working directory, download
+3.  Run the script once to generate the working directory, download
     directory, snatch list, and archive list:
 
     ```text
@@ -483,19 +488,19 @@ uploads.
     [YTDLCR] Process complete. Removing lock file.
     ```
 
-3.  Put the URL's / channels / playlists you want to download in the
+4.  Put the URL's / channels / playlists you want to download in the
     `snatch.list` file, one per line, e.g.:
 
     *   `ytuser:username`
     *   `https://www.youtube.com/user/username`
     *   `https://www.youtube.com/playlist?list=PLK9Sc5q_4K6aNajVLKtkaAB1JGmKyccf2`
 
-4.  *(Optional / Recommended)* Run the script once or twice with debugging
+5.  *(Optional / Recommended)* Run the script once or twice with debugging
     enabled (`debug=true`) to ensure everything is okie dokie. Disable
     debugging when done if you don't want `ytdlrc` to spam your system log
     when executed via cron.
 
-5.  Set up a cron job to execute the script hourly or however often you
+6.  Set up a cron job to execute the script hourly or however often you
     want, e.g.:
 
     ```crontab
@@ -520,7 +525,7 @@ uploads.
         + ytdl_root_dir="/home/your-user/ytdlrc"
         ```
 
-6. *(Optional)* Commit your configuration changes so you can easily remain
+7. *(Optional)* Commit your configuration changes so you can easily remain
    updated with the upstream version of the script:
 
    ```
