@@ -467,7 +467,9 @@ uploads.
 1.  Ensure the path to your rclone configuration file is correct or modify
     it if need be:
 
-    `rclone_config="${HOME}/.config/rclone/rclone.conf"`
+    ```shell
+    rclone_config="${HOME}/.config/rclone/rclone.conf"
+    ```
 
 2.  Modify the `rclone_destination` variable with your rclone remote
     destination path, e.g.:
