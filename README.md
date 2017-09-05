@@ -515,8 +515,8 @@ uploads.
         otherwise it will look inside `/root` for your config file:
 
         ```diff
-        - rclone_config="${HOME}/.rclone.conf"
-        + rclone_config="/home/your-user/.rclone.conf"
+        - rclone_config="${HOME}/.config/rclone/rclone.conf"
+        + rclone_config="/home/your-user/.config/rclone/rclone.conf"
         ```
 
         You may also want to modify the `ytdl_root_dir` variable so runtime
