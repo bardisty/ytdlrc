@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Tue Sep 05 2017 01:49:26 PDT -0700                              |
+# | modified | Thu Sep 21 2017 06:09:28 PDT -0700                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -155,8 +155,8 @@ say() {
 
 
 # Turn `[ "$debug" = true ] && say "message"`
-# into `debug_say "message"`
-debug_say() {
+# into `say_debug "message"`
+say_debug() {
   if [ "$debug" = true ]; then
     say "$1"
   fi
@@ -164,8 +164,8 @@ debug_say() {
 
 
 # Error printouts
-error_say() {
-  say "${printout_prefix_error} ${1}"
+say_error() {
+  say "${printout_prefix_error} ${1}" >&2
 }
 
 
@@ -186,7 +186,7 @@ is_empty() {
 #       using the pulled value
 get_video_value() {
   # Printout example: "Grabbing 'playlist_title' from 'ytuser:username'..."
-  debug_say "Grabbing '${1}' from '${2}'..."
+  say_debug "Grabbing '${1}' from '${2}'..."
 
   video_value=$(
     $ytdl_bin \
@@ -239,7 +239,7 @@ trap 'rm "$lock_file" && rm "$fifo" && exit 0' 2
 if command -v youtube-dl > /dev/null 2>&1; then
   ytdl_bin=$(command -v youtube-dl)
 else
-  error_say "\`youtube-dl\` command not found." >&2
+  say_error "\`youtube-dl\` command not found."
   exit 127
 fi
 
@@ -248,14 +248,14 @@ fi
 if command -v rclone > /dev/null 2>&1; then
   rclone_bin=$(command -v rclone)
 else
-  error_say "\`rclone\` command not found." >&2
+  say_error "\`rclone\` command not found."
   exit 127
 fi
 
 
 # Check for `ffmpeg` command
 if ! command -v ffmpeg > /dev/null 2>&1; then
-  error_say "\`ffmpeg\` command not found." >&2
+  say_error "\`ffmpeg\` command not found."
   exit 127
 fi
 
@@ -263,35 +263,35 @@ fi
 # Check for existence of lock file
 if [ -f "$lock_file" ]; then
   # Lock file exists; do nothing
-  debug_say "Lock file exists: ${lock_file}"
-  debug_say "Exiting..."
+  say_debug "Lock file exists: ${lock_file}"
+  say_debug "Exiting..."
   exit 0
 else
   # Lock file doesn't exist; create it
-  debug_say "Lock file doesn't exist. Attempting to create ${lock_file}..."
+  say_debug "Lock file doesn't exist. Attempting to create ${lock_file}..."
   # Check if temp file directory exists
   if [ -d "${temp_file_dir%/}" ]; then
     # Temp file directory exists; attempt to create lock file
     if touch "$lock_file"; then
-        debug_say "Creating '${lock_file}' succeeded. Continuing..."
+        say_debug "Creating '${lock_file}' succeeded. Continuing..."
       else
-        error_say "could not create lock file '${lock_file}'. Exiting..." >&2
+        say_error "could not create lock file '${lock_file}'. Exiting..."
         exit 1
       fi
   else
     # Temp file directory does not exist; attempt to create it
-    debug_say "Temp file directory '${temp_file_dir%/}' not found. Attempting to create it..."
+    say_debug "Temp file directory '${temp_file_dir%/}' not found. Attempting to create it..."
     if mkdir -p "${temp_file_dir%/}"; then
       # Attempt to create lock file
-      debug_say "Creating '${temp_file_dir%/}' succeeded. Creating lock file..."
+      say_debug "Creating '${temp_file_dir%/}' succeeded. Creating lock file..."
       if touch "$lock_file"; then
-        debug_say "Creating '${lock_file}' succeeded. Continuing..."
+        say_debug "Creating '${lock_file}' succeeded. Continuing..."
       else
-        error_say "could not create lock file '${lock_file}'. Exiting..." >&2
+        say_error "could not create lock file '${lock_file}'. Exiting..."
         exit 1
       fi
     else
-      error_say "could not create temp directory '${temp_file_dir%/}'. Exiting..." >&2
+      say_error "could not create temp directory '${temp_file_dir%/}'. Exiting..."
       exit 1
     fi
   fi
@@ -302,7 +302,7 @@ fi
 if [ ! -d "${ytdl_download_dir%/}" ]; then
   say "Creating download directory: ${ytdl_download_dir%/}"
   if ! mkdir -p "${ytdl_download_dir%/}"; then
-    error_say "could not create download directory '${ytdl_download_dir%/}'. Exiting..." >&2
+    say_error "could not create download directory '${ytdl_download_dir%/}'. Exiting..."
     exit 1
   fi
 fi
@@ -310,7 +310,7 @@ fi
 if [ ! -f "$ytdl_snatch_list" ]; then
   say "Creating snatch list: ${ytdl_snatch_list}"
   if ! touch "$ytdl_snatch_list"; then
-    error_say "could not create snatch list '${ytdl_snatch_list}'. Exiting..." >&2
+    say_error "could not create snatch list '${ytdl_snatch_list}'. Exiting..."
     exit 1
   fi
 fi
@@ -318,7 +318,7 @@ fi
 if [ ! -f "$ytdl_archive_list" ]; then
   say "Creating archive list: ${ytdl_archive_list}"
   if ! touch "$ytdl_archive_list"; then
-    error_say "could not create archive list '${ytdl_archive_list}'. Exiting..." >&2
+    say_error "could not create archive list '${ytdl_archive_list}'. Exiting..."
     exit 1
   fi
 fi
@@ -339,18 +339,18 @@ if [ -s "$ytdl_snatch_list" ]; then
 
       if [ "$video_value" = "$ytdl_default_video_value" ]; then
         # Failed to grab video value, try again before proceeding...
-        debug_say "Failed to grab '${ytdl_video_value}' from '${url}'. Trying again..."
+        say_debug "Failed to grab '${ytdl_video_value}' from '${url}'. Trying again..."
         get_video_value "$ytdl_video_value" "$url"
         if [ "$video_value" = "$ytdl_default_video_value" ]; then
           # Failed again, if true skip, if false continue with the default
           # value (`ytdl_default_video_value`)
           if [ "$ytdl_skip_on_fail" = true ]; then
-            debug_say "Failed to grab '${ytdl_video_value}' from '${url}' after 2 attempts. Skipping..."
+            say_debug "Failed to grab '${ytdl_video_value}' from '${url}' after 2 attempts. Skipping..."
             continue
           else
             # Printout example: "Unable to grab 'playlist_title' from '{url}'. Using
             # default value 'unknown-playlist' instead."
-            debug_say "Unable to grab '${ytdl_video_value}' from '${url}'. Using default value '${ytdl_default_video_value}' instead."
+            say_debug "Unable to grab '${ytdl_video_value}' from '${url}'. Using default value '${ytdl_default_video_value}' instead."
           fi
         fi
       fi
@@ -358,7 +358,7 @@ if [ -s "$ytdl_snatch_list" ]; then
       # Process value returned by `get_video_value()`
       if [ "$video_value" != "$ytdl_default_video_value" ]; then
         # Printout example: "'playlist_title' is 'Uploads_from_Some_Channel_Name'"
-        debug_say "'${ytdl_video_value}' is '${video_value}'"
+        say_debug "'${ytdl_video_value}' is '${video_value}'"
 
         # Trim off 'Uploads_from_' when returning titles of playlists that are just
         # all the videos a user has uploaded
@@ -366,19 +366,19 @@ if [ -s "$ytdl_snatch_list" ]; then
           string_to_trim="Uploads_from_"
           if test "${video_value#*$string_to_trim}" != "$video_value"; then
             # Printout example: "Trimming off 'Uploads_from_' from 'Uploads_from_Channel_Name'"
-            debug_say "Trimming off '${string_to_trim}' from '${video_value}'..."
+            say_debug "Trimming off '${string_to_trim}' from '${video_value}'..."
             video_value="$(printf %s\\n "$video_value"|sed 's/.*Uploads_from_//g')"
             # Printout example: "New 'playlist_title' is 'Channel_Name'"
-            debug_say "New '${ytdl_video_value}' is '${video_value}'"
+            say_debug "New '${ytdl_video_value}' is '${video_value}'"
           fi
         fi
 
         if [ "$ytdl_lowercase_directories" = true ]; then
           # Printout example: "Converting 'Channel_Name' to lowercase..."
-          debug_say "Converting '${video_value}' to lowercase..."
+          say_debug "Converting '${video_value}' to lowercase..."
           video_value=$(printf %s\\n "$video_value"|tr '[:upper:]' '[:lower:]')
           # Printout example: "New 'playlist_title' is 'channel_name'
-          debug_say "New '${ytdl_video_value}' is '${video_value}'"
+          say_debug "New '${ytdl_video_value}' is '${video_value}'"
         fi
       fi
 
@@ -391,7 +391,7 @@ if [ -s "$ytdl_snatch_list" ]; then
       #       unnecessarily in the event no new videos/metadata are downloaded
       download_directory="${ytdl_download_dir%/}/${video_value}"
       if [ -d "$download_directory" ]; then
-        debug_say "Uploading metadata to rclone remote..."
+        say_debug "Uploading metadata to rclone remote..."
         $rclone_bin "$rclone_command" "${ytdl_download_dir%/}" "${rclone_destination%/}" \
           --config "$rclone_config" --transfers 8 --checkers 16 \
           $rclone_debug_options
@@ -402,7 +402,7 @@ if [ -s "$ytdl_snatch_list" ]; then
       #   - it doesn't contain any files
       #   - `rclone_command` is set to move
       if [ -d "$download_directory" ] && is_empty "$download_directory" && [ "$rclone_command" = "move" ]; then
-        debug_say "Removing leftover download directory: ${download_directory}"
+        say_debug "Removing leftover download directory: ${download_directory}"
         rmdir "$download_directory"
       fi
 
