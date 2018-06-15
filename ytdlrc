@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Fri Jun 15 2018 15:51:46 PDT -0700                              |
+# | modified | Fri Jun 15 2018 15:56:41 PDT -0700                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -96,6 +96,13 @@ rclone_command="move"
 
 # Where to store downloaded files on the rclone remote
 rclone_destination="remote:archive/youtube"
+
+# Rclone flags
+#     * Add any additional rclone flags here, e.g.: "--syslog --bwlimit 5M"
+#         * "--config" is already set, see `rclone_config` variable above
+#         * If debug=true, "-vv --stats 1s" is appended to rclone command
+#         * If debug=false, "-q" is appended to rclone command
+rclone_flags="--acd-upload-wait-per-gb 5m"
 
 
 # ---------- You probably don't need to edit anything below this ----------
@@ -211,7 +218,7 @@ download_all_the_things() {
     --exec "$rclone_bin $rclone_command \
       '{}' '${rclone_destination%/}/${video_value}' \
       --config '$rclone_config' \
-      --acd-upload-wait-per-gb 5m0s \
+      $rclone_flags \
       $rclone_debug_flags" \
     --format "$ytdl_format" \
     --ignore-errors \
@@ -393,7 +400,7 @@ if [ -s "$ytdl_snatch_list" ]; then
         say_debug "Uploading metadata to rclone remote..."
         $rclone_bin "$rclone_command" "${ytdl_download_dir%/}" "${rclone_destination%/}" \
           --config "$rclone_config" --transfers 8 --checkers 16 \
-          $rclone_debug_flags
+          $rclone_flags $rclone_debug_flags
       fi
 
       # Delete leftover download directory if:
