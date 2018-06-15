@@ -502,11 +502,11 @@ uploads.
     debugging when done if you don't want `ytdlrc` to spam your system log
     when executed via cron.
 
-6.  Set up a cron job to execute the script hourly or however often you
-    want, e.g.:
+6.  Set up a cron job to execute the script however often you want, e.g.:
 
     ```crontab
-    30 * * * * /home/your-user/bin/ytdlrc
+    # Every 6 hours
+    30 */6 * * * /home/your-user/bin/ytdlrc
     ```
 
     *   If you set up the cron job by moving the `ytdlrc` file to one of the
