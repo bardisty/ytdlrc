@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Fri Jun 15 2018 15:56:41 PDT -0700                              |
+# | modified | Sun Jun 24 2018 02:19:01 PDT -0700                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -399,8 +399,7 @@ if [ -s "$ytdl_snatch_list" ]; then
       if [ -d "$download_directory" ]; then
         say_debug "Uploading metadata to rclone remote..."
         $rclone_bin "$rclone_command" "${ytdl_download_dir%/}" "${rclone_destination%/}" \
-          --config "$rclone_config" --transfers 8 --checkers 16 \
-          $rclone_flags $rclone_debug_flags
+          --config "$rclone_config" $rclone_flags $rclone_debug_flags
       fi
 
       # Delete leftover download directory if:
