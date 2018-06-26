@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Mon Jun 25 2018 17:46:31 PDT -0700                              |
+# | modified | Mon Jun 25 2018 18:06:38 PDT -0700                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -268,7 +268,12 @@ fi
 
 # Check if rclone config exists
 if [ ! -f "$rclone_config" ]; then
-  say_error "rclone configuration not found: ${rclone_config}. Exiting..."
+  say_error "rclone configuration not found: ${rclone_config}."
+  exit 1
+  # Check if rclone remote has any issues
+  elif ! $rclone_bin about "$rclone_destination" > /dev/null 2>&1; then
+  say_error "could not read rclone remote '${rclone_destination}'. See the \`rclone_destination\` setting."
+  say "If the remote looks correct, check for issues by running: \`rclone about ${rclone_destination}\`"
   exit 1
 fi
 
