@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Sun Jun 24 2018 02:19:01 PDT -0700                              |
+# | modified | Mon Jun 25 2018 17:46:31 PDT -0700                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -263,6 +263,13 @@ fi
 if ! command -v ffmpeg > /dev/null 2>&1; then
   say_error "\`ffmpeg\` command not found."
   exit 127
+fi
+
+
+# Check if rclone config exists
+if [ ! -f "$rclone_config" ]; then
+  say_error "rclone configuration not found: ${rclone_config}. Exiting..."
+  exit 1
 fi
 
 
