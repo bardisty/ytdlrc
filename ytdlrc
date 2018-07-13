@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Mon Jun 25 2018 18:06:38 PDT -0700                              |
+# | modified | Fri Jul 13 2018 03:35:21 PDT -0700                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -145,7 +145,7 @@ fi
 
 # Set `youtube-dl` flags for embedded subtitles
 if [ "$ytdl_embed_subtitles" = true ]; then
-  ytdl_subtitle_flags="--embed-subs --sub-format \"$ytdl_subtitle_format\" --sub-lang \"$ytdl_subtitle_lang\" --write-sub"
+  ytdl_subtitle_flags="--embed-subs --sub-format $ytdl_subtitle_format --sub-lang $ytdl_subtitle_lang --write-sub"
 
   # Set `youtube-dl` flags for automatic captions
   if [ "$ytdl_embed_automatic_captions" = true ]; then
