@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Fri Jul 13 2018 03:35:21 PDT -0700                              |
+# | modified | Fri Jul 13 2018 16:14:46 PDT -0700                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -43,18 +43,25 @@ ytdl_format="bestvideo+bestaudio"
 # Output template for downloaded filenames
 ytdl_output_template="%(uploader)s.%(upload_date)s.%(title)s.%(resolution)s.%(id)s.%(ext)s"
 
-# Download and embed subtitles?
-ytdl_embed_subtitles=true
+# Write subtitle file (if available)
+ytdl_write_subtitles=true
 
-# Download and embed automatic captions?
-#     * Requires `ytdl_embed_subtitles=true`
-ytdl_embed_automatic_captions=true
+# Write automatically generated subtitle file (YouTube only)
+ytdl_write_automatic_subtitles=true
 
-# What subtitle format to use for embedded subtitles
+# Download all the available subtitles of the video
+#     * If `false`, only subtitles matching the specified language(s)
+#       in the `ytdl_subtitle_lang` setting will be downloaded
+#     * If `true`, downloading an entire channel will take considerably
+#       more time to process
+ytdl_write_all_subtitles=false
+
+# What subtitle format to use
 ytdl_subtitle_format="srt/best"
 
-# What subtitle languages to download and embed (separated by commas)
+# What subtitle languages to download (separated by commas)
 #     * Use `youtube-dl --list-subs` to view available language tags
+#     * Ignored if `ytdl_write_all_subtitles=true`
 ytdl_subtitle_lang="en"
 
 # What value to grab from the first video in a playlist
@@ -143,14 +150,28 @@ else
   rclone_debug_flags="-q"
 fi
 
-# Set `youtube-dl` flags for embedded subtitles
-if [ "$ytdl_embed_subtitles" = true ]; then
-  ytdl_subtitle_flags="--embed-subs --sub-format $ytdl_subtitle_format --sub-lang $ytdl_subtitle_lang --write-sub"
+if [ "$ytdl_write_subtitles" = true ] || [ "$ytdl_write_automatic_subtitles" = true ]; then
+  ytdl_subtitle_flags="--sub-format ${ytdl_subtitle_format}"
 
-  # Set `youtube-dl` flags for automatic captions
-  if [ "$ytdl_embed_automatic_captions" = true ]; then
-    ytdl_automatic_caption_flags="--write-auto-sub"
+  # Set `youtube-dl` flags for writing subtitle files
+  if [ "$ytdl_write_subtitles" = true ]; then
+    ytdl_subtitle_flags="${ytdl_subtitle_flags} --write-sub"
   fi
+
+  # Set `youtube-dl` flags for writing automatic subtitles
+  if [ "$ytdl_write_automatic_subtitles" = true ]; then
+    ytdl_subtitle_flags="${ytdl_subtitle_flags} --write-auto-sub"
+  fi
+
+  # Set `youtube-dl` flags for writing all subtitles or only specified languages
+  if [ "$ytdl_write_all_subtitles" = true ]; then
+    # Append `--all-subs` flag
+    ytdl_subtitle_flags="${ytdl_subtitle_flags} --all-subs"
+  else
+    # Append `--sub-lang` flag
+    ytdl_subtitle_flags="${ytdl_subtitle_flags} --sub-lang $ytdl_subtitle_lang"
+  fi
+
 fi
 
 
@@ -231,7 +252,6 @@ download_all_the_things() {
     --xattrs \
     "$ytdl_debug_flags" \
     $ytdl_subtitle_flags \
-    $ytdl_automatic_caption_flags \
     "$1"
 }
 
