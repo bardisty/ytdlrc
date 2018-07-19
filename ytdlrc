@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Fri Jul 13 2018 16:14:46 PDT -0700                              |
+# | modified | Thu Jul 19 2018 16:40:47 PDT -0700                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -242,6 +242,7 @@ download_all_the_things() {
       $rclone_flags \
       $rclone_debug_flags" \
     --format "$ytdl_format" \
+    --ignore-config \
     --ignore-errors \
     --no-overwrites \
     --output "${ytdl_download_dir%/}/${video_value}/${ytdl_output_template}" \
