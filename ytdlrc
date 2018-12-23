@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Thu Jul 19 2018 16:40:47 PDT -0700                              |
+# | modified | Sat Dec 22 2018 22:14:22 PST -0800                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -109,7 +109,7 @@ rclone_destination="remote:archive/youtube"
 #         * "--config" is already set, see `rclone_config` variable above
 #         * If debug=true, "-vv --stats 1s" is appended to rclone command
 #         * If debug=false, "-q" is appended to rclone command
-rclone_flags="--acd-upload-wait-per-gb 5m"
+rclone_flags="--transfers 8 --checkers 16 --acd-upload-wait-per-gb 5m"
 
 
 # ---------- You probably don't need to edit anything below this ----------
