@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Sat Dec 22 2018 22:22:52 PST -0800                              |
+# | modified | Sat Dec 22 2018 22:39:00 PST -0800                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -213,16 +213,16 @@ is_empty() {
 #       using the pulled value
 get_video_value() {
   # Printout example: "Grabbing 'playlist_title' from 'ytuser:username'..."
-  say_debug "Grabbing '${1}' from '${2}'..."
+  say_debug "Grabbing '${1}' from '${3}'..."
 
   video_value=$(
     $ytdl_bin \
       --force-ipv4 \
       --get-filename \
       --output "%(${1})s" \
-      --playlist-items 1 \
+      --playlist-items "$2" \
       --restrict-filenames \
-      "$2"
+      "$3"
   )
 
   # Assign a default value if `youtube-dl` was unable to pull
@@ -374,12 +374,12 @@ if [ -s "$ytdl_snatch_list" ]; then
   while IFS= read -r url; do
     if [ -n "$url" ]; then
       say "Processing ${url}..."
-      get_video_value "$ytdl_video_value" "$url"
+      get_video_value "$ytdl_video_value" "1" "$url"
 
       if [ "$video_value" = "$ytdl_default_video_value" ]; then
-        # Failed to grab video value, try again before proceeding...
-        say_debug "Failed to grab '${ytdl_video_value}' from '${url}'. Trying again..."
-        get_video_value "$ytdl_video_value" "$url"
+        # Failed to grab video value, try the 2nd video before proceeding...
+        say_debug "Failed to grab '${ytdl_video_value}' from '${url}'. Trying 2nd video instead..."
+        get_video_value "$ytdl_video_value" "2" "$url"
         if [ "$video_value" = "$ytdl_default_video_value" ]; then
           # Failed again, if true skip, if false continue with the default
           # value (`ytdl_default_video_value`)
