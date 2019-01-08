@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Mon Jan 07 2019 22:15:03 PST -0800                              |
+# | modified | Mon Jan 07 2019 22:23:47 PST -0800                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -257,6 +257,37 @@ download_all_the_things() {
 }
 
 
+check_rclone_version() {
+  minimum_required_version=1.43
+  rclone_version=$(rclone --version|awk '/rclone/ { print $2 }')
+  prefix_to_trim="v"
+  suffix_to_trim="-DEV"
+
+  # Check if output contains `v` before version number
+  if test "${rclone_version#*$prefix_to_trim}" != "$rclone_version"; then
+    # Trim off `v`
+    rclone_version=$(printf %s\\n "$rclone_version"|sed "s/^$prefix_to_trim//")
+  fi
+
+  # Check if output contains `-DEV` after the version number
+  if test "${rclone_version#*$suffix_to_trim}" != "$rclone_version"; then
+    # Trim off `-DEV`
+    rclone_version=$(printf %s\\n "$rclone_version"|sed "s/$suffix_to_trim$//")
+  fi
+
+  meets_minimum_required_version=$(awk -v current="$rclone_version" \
+    -v required="$minimum_required_version" \
+    'BEGIN{print current<required?0:1}' \
+  )
+
+  if [ "$meets_minimum_required_version" -eq 0 ]; then
+    say_error "rclone does not meet minimum required version."
+    say "Installed version: ${rclone_version}"
+    say "Minimum required version: ${minimum_required_version}"
+  fi
+}
+
+
 # Catch CTRL-C; clean up temp files and exit script to prevent further
 # commands from executing
 trap 'rm "$lock_file" && rm "$fifo" && exit 0' 2
@@ -278,6 +309,10 @@ else
   say_error "\`rclone\` command not found."
   exit 127
 fi
+
+
+# Ensure rclone meets minimum required version
+check_rclone_version
 
 
 # Check for `ffmpeg` command
