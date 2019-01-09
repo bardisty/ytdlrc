@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Mon Jan 07 2019 22:23:47 PST -0800                              |
+# | modified | Tue Jan 08 2019 23:25:22 PST -0800                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -259,21 +259,25 @@ download_all_the_things() {
 
 check_rclone_version() {
   minimum_required_version=1.43
-  rclone_version=$(rclone --version|awk '/rclone/ { print $2 }')
-  prefix_to_trim="v"
-  suffix_to_trim="-DEV"
+  rclone_version=$($rclone_bin --version|awk '/rclone/ { print $2 }')
+  version_prefix="v"
+  version_dev="-DEV"
+  version_beta="-beta"
 
-  # Check if output contains `v` before version number
-  if test "${rclone_version#*$prefix_to_trim}" != "$rclone_version"; then
-    # Trim off `v`
-    rclone_version=$(printf %s\\n "$rclone_version"|sed "s/^$prefix_to_trim//")
-  fi
+  if_contains_string() {
+    if test "${rclone_version#*$1}" != "$rclone_version"; then
+      rclone_version=$(printf %s\\n "$rclone_version"|$2)
+    fi
+  }
 
-  # Check if output contains `-DEV` after the version number
-  if test "${rclone_version#*$suffix_to_trim}" != "$rclone_version"; then
-    # Trim off `-DEV`
-    rclone_version=$(printf %s\\n "$rclone_version"|sed "s/$suffix_to_trim$//")
-  fi
+  # If beta, trim off everything after version number
+  if_contains_string "$version_beta" "cut -d - -f 1"
+
+  # If dev, trim off everything after version number
+  if_contains_string "$version_dev" "cut -d - -f 1"
+
+  # Trim off `v` from version number
+  if_contains_string "$version_prefix" "sed s/^$version_prefix//"
 
   meets_minimum_required_version=$(awk -v current="$rclone_version" \
     -v required="$minimum_required_version" \
