@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Wed Jan 09 2019 17:20:48 PST -0800                              |
+# | modified | Fri Jan 11 2019 19:43:36 PST -0800                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -170,7 +170,7 @@ if [ "$ytdl_write_subtitles" = true ] || [ "$ytdl_write_automatic_subtitles" = t
     ytdl_subtitle_flags="${ytdl_subtitle_flags} --all-subs"
   else
     # Append `--sub-lang` flag
-    ytdl_subtitle_flags="${ytdl_subtitle_flags} --sub-lang $ytdl_subtitle_lang"
+    ytdl_subtitle_flags="${ytdl_subtitle_flags} --sub-lang ${ytdl_subtitle_lang}"
   fi
 
 fi
@@ -277,7 +277,7 @@ check_rclone_version() {
   if_contains_string "$version_dev" "cut -d - -f 1"
 
   # Trim off `v` from version number
-  if_contains_string "$version_prefix" "sed s/^$version_prefix//"
+  if_contains_string "$version_prefix" "sed s/^${version_prefix}//"
 
   meets_minimum_required_version=$(awk -v current="$rclone_version" \
     -v required="$minimum_required_version" \
