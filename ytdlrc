@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Fri Jan 11 2019 19:51:16 PST -0800                              |
+# | modified | Fri Jan 11 2019 20:07:41 PST -0800                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -445,7 +445,7 @@ if [ -s "$ytdl_snatch_list" ]; then
           if test "${video_value#*$string_to_trim}" != "$video_value"; then
             # Printout example: "Trimming off 'Uploads_from_' from 'Uploads_from_Channel_Name'"
             say_debug "Trimming off '${string_to_trim}' from '${video_value}'..."
-            video_value="$(printf %s\\n "$video_value"|sed "s/^$string_to_trim//")"
+            video_value="$(printf %s\\n "$video_value"|sed "s/^${string_to_trim}//")"
             # Printout example: "New 'playlist_title' is 'Channel_Name'"
             say_debug "New '${ytdl_video_value}' is '${video_value}'"
           fi
