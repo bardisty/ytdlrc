@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Fri Jan 11 2019 20:07:41 PST -0800                              |
+# | modified | Sun Jan 13 2019 23:27:07 PST -0800                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -288,6 +288,7 @@ check_rclone_version() {
     say_error "rclone does not meet minimum required version."
     say "Installed version: ${rclone_version}"
     say "Minimum required version: ${minimum_required_version}"
+    exit 1
   fi
 }
 
