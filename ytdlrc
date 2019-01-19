@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Sat Jan 19 2019 01:12:35 PST -0800                              |
+# | modified | Sat Jan 19 2019 01:46:41 PST -0800                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -307,7 +307,7 @@ check_xattr_support() {
       exit 127
     fi
 
-    xattr_test_file="${temp_file_dir%/}/ytdlrc_xattr_test"
+    xattr_test_file="${ytdl_download_dir%/}/ytdlrc_xattr_test"
     if touch "$xattr_test_file"; then
       if ! setfattr -n "user.testAttr" -v "attribute value" "$xattr_test_file" > /dev/null 2>&1; then
         say_error "Extended attributes not supported."
@@ -331,10 +331,6 @@ check_xattr_support() {
 # Catch CTRL-C; clean up temp files and exit script to prevent further
 # commands from executing
 trap 'rm "$lock_file" && rm "$fifo" && exit 0' 2
-
-
-# Ensure xattrs are supported, if enabled
-check_xattr_support
 
 
 # Check for `youtube-dl` command
@@ -440,6 +436,10 @@ if [ ! -f "$ytdl_archive_list" ]; then
     exit 1
   fi
 fi
+
+
+# Ensure xattrs are supported, if enabled
+check_xattr_support
 
 
 # Read through `ytdl_snatch_list` file only if it contains URL's /
