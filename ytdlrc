@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Sat Jan 19 2019 01:46:41 PST -0800                              |
+# | modified | Sat Jan 19 2019 01:52:27 PST -0800                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -319,7 +319,7 @@ check_xattr_support() {
         rm "$xattr_test_file"
       fi
     else
-      say_error "Could not create xattrs test file. Does ${temp_file_dir} exist?"
+      say_error "Could not create xattrs test file. Does ${ytdl_download_dir%/} exist?"
       say "You can bypass this by setting \`ytdl_write_metadata_to_xattrs\` to \`false\`."
       exit 1
     fi
