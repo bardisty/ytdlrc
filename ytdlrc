@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Sat Jan 19 2019 01:52:27 PST -0800                              |
+# | modified | Sat Feb 02 2019 15:55:24 PST -0800                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -439,7 +439,32 @@ fi
 
 
 # Ensure xattrs are supported, if enabled
-check_xattr_support
+if [ "$ytdl_write_metadata_to_xattrs" = true ]; then
+
+  if ! command -v attr > /dev/null 2>&1; then
+    say_error "\`attr\` command not found."
+    say "Please install the \`attr\` package or set \`ytdl_write_metadata_to_xattrs\` to \`false\`."
+    exit 127
+  fi
+
+  xattr_test_file="${ytdl_download_dir%/}/ytdlrc_xattr_test"
+  if touch "$xattr_test_file"; then
+    if ! setfattr -n "user.testAttr" -v "attribute value" "$xattr_test_file" > /dev/null 2>&1; then
+      say_error "Extended attributes not supported."
+      say "Please set \`ytdl_write_metadata_to_xattrs\` to \`false\`."
+      rm "$xattr_test_file"
+      exit 1
+    else
+      ytdl_xattrs_flag="--xattrs"
+      rm "$xattr_test_file"
+    fi
+  else
+    say_error "Could not create xattrs test file. Does ${ytdl_download_dir%/} exist?"
+    say "You can bypass this by setting \`ytdl_write_metadata_to_xattrs\` to \`false\`."
+    exit 1
+  fi
+
+fi
 
 
 # Read through `ytdl_snatch_list` file only if it contains URL's /
