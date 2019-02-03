@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Sat Feb 02 2019 16:24:00 PST -0800                              |
+# | modified | Sat Feb 02 2019 17:38:07 PST -0800                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -229,6 +229,11 @@ check_rclone_version() {
       rclone_version=$(printf %s\\n "$rclone_version"|$2)
     fi
   }
+
+  if ! command_exists awk; then
+    say_error "Command not found: awk"
+    exit 127
+  fi
 
   # If beta, trim off everything after version number
   if_contains_string "$version_beta" "cut -d - -f 1"
