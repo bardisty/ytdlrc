@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Sat Feb 02 2019 17:38:07 PST -0800                              |
+# | modified | Sat Feb 02 2019 17:39:37 PST -0800                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -250,9 +250,9 @@ check_rclone_version() {
   )
 
   if [ "$meets_minimum_required_version" -eq 0 ]; then
-    say_error "rclone does not meet minimum required version."
-    say "Installed version: ${rclone_version}"
-    say "Minimum required version: ${minimum_required_version}"
+    say_error "Rclone does not meet minimum required version."
+    say_error "Installed version: ${rclone_version}"
+    say_error "Minimum required version: ${minimum_required_version}"
     exit 1
   fi
 }
@@ -282,7 +282,7 @@ lock_file="${temp_file_dir%/}/ytdlrc.lock"
 printout_prefix="${text_bold}${text_yellow}[YTDLRC]${text_reset}"
 
 # Prefix for error printouts
-printout_prefix_error="${text_bold}${text_red}Error:${text_reset}"
+printout_prefix_error="${text_bold}${text_red}[Error]${text_reset}"
 
 # Set `youtube-dl` and `rclone` command flags depending on debugging status
 if [ "$debug" = true ]; then
@@ -326,7 +326,7 @@ trap 'rm "$lock_file" && rm "$fifo" && exit 0' 2
 required_commands="youtube-dl ffmpeg rclone"
 for cmd in $required_commands; do
   if ! command_exists "$cmd"; then
-    say_error "${cmd} not found."
+    say_error "Command not found: ${cmd}"
     exit 127
   fi
 done
@@ -338,12 +338,12 @@ check_rclone_version
 
 # Check if rclone config exists
 if [ ! -f "$rclone_config" ]; then
-  say_error "rclone configuration not found: ${rclone_config}."
+  say_error "Rclone configuration not found: ${rclone_config}."
   exit 1
   # Check if rclone remote has any issues
   elif ! rclone about "$rclone_destination" > /dev/null 2>&1; then
-  say_error "could not read rclone remote '${rclone_destination}'. See the \`rclone_destination\` setting."
-  say "If the remote looks correct, check for issues by running: \`rclone about ${rclone_destination}\`"
+  say_error "Could not read rclone remote '${rclone_destination}'. See the \`rclone_destination\` setting."
+  say_error "If the remote looks correct, check for issues by running: \`rclone about ${rclone_destination}\`"
   exit 1
 fi
 
@@ -363,7 +363,7 @@ else
     if touch "$lock_file"; then
         say_debug "Creating '${lock_file}' succeeded. Continuing..."
       else
-        say_error "could not create lock file '${lock_file}'. Exiting..."
+        say_error "Could not create lock file '${lock_file}'. Exiting..."
         exit 1
       fi
   else
@@ -375,11 +375,11 @@ else
       if touch "$lock_file"; then
         say_debug "Creating '${lock_file}' succeeded. Continuing..."
       else
-        say_error "could not create lock file '${lock_file}'. Exiting..."
+        say_error "Could not create lock file '${lock_file}'. Exiting..."
         exit 1
       fi
     else
-      say_error "could not create temp directory '${temp_file_dir%/}'. Exiting..."
+      say_error "Could not create temp directory '${temp_file_dir%/}'. Exiting..."
       exit 1
     fi
   fi
@@ -390,7 +390,7 @@ fi
 if [ ! -d "${ytdl_download_dir%/}" ]; then
   say "Creating download directory: ${ytdl_download_dir%/}"
   if ! mkdir -p "${ytdl_download_dir%/}"; then
-    say_error "could not create download directory '${ytdl_download_dir%/}'. Exiting..."
+    say_error "Could not create download directory '${ytdl_download_dir%/}'. Exiting..."
     exit 1
   fi
 fi
@@ -398,7 +398,7 @@ fi
 if [ ! -f "$ytdl_snatch_list" ]; then
   say "Creating snatch list: ${ytdl_snatch_list}"
   if ! touch "$ytdl_snatch_list"; then
-    say_error "could not create snatch list '${ytdl_snatch_list}'. Exiting..."
+    say_error "Could not create snatch list '${ytdl_snatch_list}'. Exiting..."
     exit 1
   fi
 fi
@@ -406,7 +406,7 @@ fi
 if [ ! -f "$ytdl_archive_list" ]; then
   say "Creating archive list: ${ytdl_archive_list}"
   if ! touch "$ytdl_archive_list"; then
-    say_error "could not create archive list '${ytdl_archive_list}'. Exiting..."
+    say_error "Could not create archive list '${ytdl_archive_list}'. Exiting..."
     exit 1
   fi
 fi
@@ -416,8 +416,8 @@ fi
 if [ "$ytdl_write_metadata_to_xattrs" = true ]; then
 
   if ! command_exists attr; then
-    say_error "\`attr\` command not found."
-    say "Please install the \`attr\` package or set \`ytdl_write_metadata_to_xattrs\` to \`false\`."
+    say_error "Command not found: attr"
+    say_error "Please install the \`attr\` package or set \`ytdl_write_metadata_to_xattrs\` to \`false\`."
     exit 127
   fi
 
@@ -425,7 +425,7 @@ if [ "$ytdl_write_metadata_to_xattrs" = true ]; then
   if touch "$xattr_test_file"; then
     if ! setfattr -n "user.testAttr" -v "attribute value" "$xattr_test_file" > /dev/null 2>&1; then
       say_error "Extended attributes not supported."
-      say "Please set \`ytdl_write_metadata_to_xattrs\` to \`false\`."
+      say_error "Please set \`ytdl_write_metadata_to_xattrs\` to \`false\`."
       rm "$xattr_test_file"
       exit 1
     else
@@ -434,7 +434,7 @@ if [ "$ytdl_write_metadata_to_xattrs" = true ]; then
     fi
   else
     say_error "Could not create xattrs test file. Does ${ytdl_download_dir%/} exist?"
-    say "You can bypass this by setting \`ytdl_write_metadata_to_xattrs\` to \`false\`."
+    say_error "You can bypass this by setting \`ytdl_write_metadata_to_xattrs\` to \`false\`."
     exit 1
   fi
 
