@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Sat Feb 02 2019 15:55:24 PST -0800                              |
+# | modified | Sat Feb 02 2019 16:08:14 PST -0800                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -121,9 +121,141 @@ rclone_flags="--transfers 8 --checkers 16 --acd-upload-wait-per-gb 5m"
 # ---------- You probably don't need to edit anything below this ----------
 
 
+# POSIX-friendly variable printing
+say() {
+  printf %s\\n "${printout_prefix} ${1}"
+}
+
+
+# Turn `[ "$debug" = true ] && say "message"`
+# into `say_debug "message"`
+say_debug() {
+  if [ "$debug" = true ]; then
+    say "$1"
+  fi
+}
+
+
+# Error printouts
+say_error() {
+  say "${printout_prefix_error} ${1}" >&2
+}
+
+
+# Determine if a directory is empty
+# Source: http://www.etalabs.net/sh_tricks.html
+is_empty() {
+  cd "$1" || return 0
+  set -- .[!.]* ; test -f "$1" && return 1
+  set -- ..?* ; test -f "$1" && return 1
+  set -- * ; test -f "$1" && return 1
+  return 0
+}
+
+
+command_exists() {
+  cmd="$1"
+
+  if eval type type > /dev/null 2>&1; then
+    eval type "$cmd" > /dev/null 2>&1
+  else
+    command -v "$cmd" > /dev/null 2>&1
+  fi
+
+  ret="$?"
+  return $ret
+}
+
+
+# Get a value from the video (default is playlist_title) and store it in a
+# variable
+#     * Required to store videos on rclone remote in separate directories
+#       using the pulled value
+get_video_value() {
+  # Printout example: "Grabbing 'playlist_title' from 'ytuser:username'..."
+  say_debug "Grabbing '${1}' from '${3}'..."
+
+  video_value=$(
+    youtube-dl \
+      --force-ipv4 \
+      --get-filename \
+      --output "%(${1})s" \
+      --playlist-items "$2" \
+      --restrict-filenames \
+      "$3"
+  )
+
+  # Assign a default value if `youtube-dl` was unable to pull
+  # `playlist_title` from the video
+  video_value="${video_value:-$ytdl_default_video_value}"
+}
+
+
+download_all_the_things() {
+  youtube-dl \
+    --force-ipv4 \
+    --continue \
+    --download-archive "$ytdl_archive_list" \
+    --exec "rclone $rclone_command \
+      '{}' '${rclone_destination%/}/${video_value}' \
+      --config '$rclone_config' \
+      $rclone_flags \
+      $rclone_debug_flags" \
+    --format "$ytdl_format" \
+    --ignore-config \
+    --ignore-errors \
+    --no-overwrites \
+    --output "${ytdl_download_dir%/}/${video_value}/${ytdl_output_template}" \
+    --restrict-filenames \
+    --write-description \
+    --write-info-json \
+    --write-thumbnail \
+    "$ytdl_debug_flags" \
+    $ytdl_subtitle_flags \
+    $ytdl_xattrs_flag \
+    "$1"
+}
+
+
+check_rclone_version() {
+  minimum_required_version=1.43
+  rclone_version=$(rclone --version|awk '/rclone/ { print $2 }')
+  version_prefix="v"
+  version_dev="-DEV"
+  version_beta="-beta"
+
+  if_contains_string() {
+    if test "${rclone_version#*$1}" != "$rclone_version"; then
+      rclone_version=$(printf %s\\n "$rclone_version"|$2)
+    fi
+  }
+
+  # If beta, trim off everything after version number
+  if_contains_string "$version_beta" "cut -d - -f 1"
+
+  # If dev, trim off everything after version number
+  if_contains_string "$version_dev" "cut -d - -f 1"
+
+  # Trim off `v` from version number
+  if_contains_string "$version_prefix" "sed s/^${version_prefix}//"
+
+  meets_minimum_required_version=$(awk -v current="$rclone_version" \
+    -v required="$minimum_required_version" \
+    'BEGIN{print current<required?0:1}' \
+  )
+
+  if [ "$meets_minimum_required_version" -eq 0 ]; then
+    say_error "rclone does not meet minimum required version."
+    say "Installed version: ${rclone_version}"
+    say "Minimum required version: ${minimum_required_version}"
+    exit 1
+  fi
+}
+
+
 # Colors for info / error printouts
 if tty > /dev/null 2>&1; then
-  if command -v tput > /dev/null 2>&1; then
+  if command_exists tput; then
     text_reset=$(tput sgr0)
     text_bold=$(tput bold)
     text_red=$(tput setaf 1)
@@ -181,181 +313,18 @@ if [ "$ytdl_write_subtitles" = true ] || [ "$ytdl_write_automatic_subtitles" = t
 fi
 
 
-# POSIX-friendly variable printing
-say() {
-  printf %s\\n "${printout_prefix} ${1}"
-}
-
-
-# Turn `[ "$debug" = true ] && say "message"`
-# into `say_debug "message"`
-say_debug() {
-  if [ "$debug" = true ]; then
-    say "$1"
-  fi
-}
-
-
-# Error printouts
-say_error() {
-  say "${printout_prefix_error} ${1}" >&2
-}
-
-
-# Determine if a directory is empty
-# Source: http://www.etalabs.net/sh_tricks.html
-is_empty() {
-  cd "$1" || return 0
-  set -- .[!.]* ; test -f "$1" && return 1
-  set -- ..?* ; test -f "$1" && return 1
-  set -- * ; test -f "$1" && return 1
-  return 0
-}
-
-
-# Get a value from the video (default is playlist_title) and store it in a
-# variable
-#     * Required to store videos on rclone remote in separate directories
-#       using the pulled value
-get_video_value() {
-  # Printout example: "Grabbing 'playlist_title' from 'ytuser:username'..."
-  say_debug "Grabbing '${1}' from '${3}'..."
-
-  video_value=$(
-    $ytdl_bin \
-      --force-ipv4 \
-      --get-filename \
-      --output "%(${1})s" \
-      --playlist-items "$2" \
-      --restrict-filenames \
-      "$3"
-  )
-
-  # Assign a default value if `youtube-dl` was unable to pull
-  # `playlist_title` from the video
-  video_value="${video_value:-$ytdl_default_video_value}"
-}
-
-
-download_all_the_things() {
-  $ytdl_bin \
-    --force-ipv4 \
-    --continue \
-    --download-archive "$ytdl_archive_list" \
-    --exec "$rclone_bin $rclone_command \
-      '{}' '${rclone_destination%/}/${video_value}' \
-      --config '$rclone_config' \
-      $rclone_flags \
-      $rclone_debug_flags" \
-    --format "$ytdl_format" \
-    --ignore-config \
-    --ignore-errors \
-    --no-overwrites \
-    --output "${ytdl_download_dir%/}/${video_value}/${ytdl_output_template}" \
-    --restrict-filenames \
-    --write-description \
-    --write-info-json \
-    --write-thumbnail \
-    "$ytdl_debug_flags" \
-    $ytdl_subtitle_flags \
-    $ytdl_xattrs_flag \
-    "$1"
-}
-
-
-check_rclone_version() {
-  minimum_required_version=1.43
-  rclone_version=$($rclone_bin --version|awk '/rclone/ { print $2 }')
-  version_prefix="v"
-  version_dev="-DEV"
-  version_beta="-beta"
-
-  if_contains_string() {
-    if test "${rclone_version#*$1}" != "$rclone_version"; then
-      rclone_version=$(printf %s\\n "$rclone_version"|$2)
-    fi
-  }
-
-  # If beta, trim off everything after version number
-  if_contains_string "$version_beta" "cut -d - -f 1"
-
-  # If dev, trim off everything after version number
-  if_contains_string "$version_dev" "cut -d - -f 1"
-
-  # Trim off `v` from version number
-  if_contains_string "$version_prefix" "sed s/^${version_prefix}//"
-
-  meets_minimum_required_version=$(awk -v current="$rclone_version" \
-    -v required="$minimum_required_version" \
-    'BEGIN{print current<required?0:1}' \
-  )
-
-  if [ "$meets_minimum_required_version" -eq 0 ]; then
-    say_error "rclone does not meet minimum required version."
-    say "Installed version: ${rclone_version}"
-    say "Minimum required version: ${minimum_required_version}"
-    exit 1
-  fi
-}
-
-
-check_xattr_support() {
-  if [ "$ytdl_write_metadata_to_xattrs" = true ]; then
-
-    if ! command -v attr > /dev/null 2>&1; then
-      say_error "\`attr\` command not found. Please install the \`attr\` package or set \`ytdl_write_metadata_to_xattrs\` to \`false\`."
-      exit 127
-    fi
-
-    xattr_test_file="${ytdl_download_dir%/}/ytdlrc_xattr_test"
-    if touch "$xattr_test_file"; then
-      if ! setfattr -n "user.testAttr" -v "attribute value" "$xattr_test_file" > /dev/null 2>&1; then
-        say_error "Extended attributes not supported."
-        say "Please set \`ytdl_write_metadata_to_xattrs\` to \`false\`."
-        rm "$xattr_test_file"
-        exit 1
-      else
-        ytdl_xattrs_flag="--xattrs"
-        rm "$xattr_test_file"
-      fi
-    else
-      say_error "Could not create xattrs test file. Does ${ytdl_download_dir%/} exist?"
-      say "You can bypass this by setting \`ytdl_write_metadata_to_xattrs\` to \`false\`."
-      exit 1
-    fi
-
-  fi
-}
-
-
 # Catch CTRL-C; clean up temp files and exit script to prevent further
 # commands from executing
 trap 'rm "$lock_file" && rm "$fifo" && exit 0' 2
 
 
-# Check for `youtube-dl` command
-if command -v youtube-dl > /dev/null 2>&1; then
-  ytdl_bin=$(command -v youtube-dl)
-else
-  say_error "\`youtube-dl\` command not found."
-  exit 127
-fi
-
-
-# Check for `ffmpeg` command
-if ! command -v ffmpeg > /dev/null 2>&1; then
-  say_error "\`ffmpeg\` command not found."
-  exit 127
-fi
-
-
-# Check for `rclone` command
-if command -v rclone > /dev/null 2>&1; then
-  rclone_bin=$(command -v rclone)
-else
-  say_error "\`rclone\` command not found."
-  exit 127
-fi
+required_commands="youtube-dl ffmpeg rclone"
+for cmd in $required_commands; do
+  if ! command_exists "$cmd"; then
+    say_error "${cmd} not found."
+    exit 127
+  fi
+done
 
 
 # Ensure rclone meets minimum required version
@@ -367,7 +336,7 @@ if [ ! -f "$rclone_config" ]; then
   say_error "rclone configuration not found: ${rclone_config}."
   exit 1
   # Check if rclone remote has any issues
-  elif ! $rclone_bin about "$rclone_destination" > /dev/null 2>&1; then
+  elif ! rclone about "$rclone_destination" > /dev/null 2>&1; then
   say_error "could not read rclone remote '${rclone_destination}'. See the \`rclone_destination\` setting."
   say "If the remote looks correct, check for issues by running: \`rclone about ${rclone_destination}\`"
   exit 1
@@ -441,7 +410,7 @@ fi
 # Ensure xattrs are supported, if enabled
 if [ "$ytdl_write_metadata_to_xattrs" = true ]; then
 
-  if ! command -v attr > /dev/null 2>&1; then
+  if ! command_exists attr; then
     say_error "\`attr\` command not found."
     say "Please install the \`attr\` package or set \`ytdl_write_metadata_to_xattrs\` to \`false\`."
     exit 127
@@ -535,7 +504,7 @@ if [ -s "$ytdl_snatch_list" ]; then
       download_directory="${ytdl_download_dir%/}/${video_value}"
       if [ -d "$download_directory" ]; then
         say_debug "Uploading metadata to rclone remote..."
-        $rclone_bin "$rclone_command" "$download_directory" \
+        rclone "$rclone_command" "$download_directory" \
           "${rclone_destination%/}/${video_value}" --config "$rclone_config" \
           $rclone_flags $rclone_debug_flags
       fi
