@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Sat Feb 02 2019 16:08:14 PST -0800                              |
+# | modified | Sat Feb 02 2019 16:24:00 PST -0800                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -57,8 +57,8 @@ ytdl_write_automatic_subtitles=true
 # Download all the available subtitles of the video
 #     * If `false`, only subtitles matching the specified language(s)
 #       in the `ytdl_subtitle_lang` setting will be downloaded
-#     * If `true`, downloading an entire channel will take considerably
-#       more time to process
+#     * If `true`, downloading an entire channel may take considerably more
+#       time to process
 ytdl_write_all_subtitles=false
 
 # What subtitle format to use
