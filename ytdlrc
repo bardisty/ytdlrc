@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Sat Feb 02 2019 17:39:37 PST -0800                              |
+# | modified | Sat Feb 02 2019 18:24:59 PST -0800                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -162,8 +162,7 @@ command_exists() {
     command -v "$cmd" > /dev/null 2>&1
   fi
 
-  ret="$?"
-  return $ret
+  return $?
 }
 
 
