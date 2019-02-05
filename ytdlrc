@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Sat Feb 02 2019 18:43:06 PST -0800                              |
+# | modified | Mon Feb 04 2019 20:30:20 PST -0800                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -138,8 +138,17 @@ say_error() {
 
 
 say_debug() {
+  message_type="$2"
   if [ "$debug" = true ]; then
-    say "$1"
+
+    if [ "$message_type" = "success" ]; then
+      printout_prefix_debug="${text_bold}${text_gray}[Debug]${text_green} [OK]${text_reset}"
+    else
+      printout_prefix_debug="${text_bold}${text_gray}[Debug]${text_reset}"
+    fi
+
+    say "${printout_prefix_debug} ${1}"
+
   fi
 }
 
@@ -236,6 +245,8 @@ check_rclone_version() {
     exit 127
   fi
 
+  say_debug "Checking if rclone meets minimum required version (${minimum_required_version})..."
+
   # If beta, trim off everything after version number
   if_contains_string "$version_beta" "cut -d - -f 1"
 
@@ -255,6 +266,8 @@ check_rclone_version() {
     say_error "Installed version: ${rclone_version}"
     say_error "Minimum required version: ${minimum_required_version}"
     exit 1
+  else
+    say_debug "Installed version: ${rclone_version}" success
   fi
 }
 
@@ -266,8 +279,11 @@ if tty > /dev/null 2>&1; then
     text_bold=$(tput bold)
     text_red=$(tput setaf 1)
     text_yellow=$(tput setaf 3)
+    text_green=$(tput setaf 2)
+    text_gray=$(tput setaf 8)
   fi
 fi
+
 
 # Where to store temp runtime files (FIFO and lock file)
 temp_file_dir="/tmp"
@@ -278,6 +294,7 @@ fifo="${temp_file_dir%/}/ytdlrc.fifo"
 # Where to store lock file to prevent the script from running more than once
 # at a time
 lock_file="${temp_file_dir%/}/ytdlrc.lock"
+
 
 # Set `youtube-dl` and `rclone` command flags depending on debugging status
 if [ "$debug" = true ]; then
@@ -318,11 +335,14 @@ fi
 trap 'rm "$lock_file" && rm "$fifo" && exit 0' 2
 
 
+say_debug "Checking required commands..."
 required_commands="youtube-dl ffmpeg rclone"
 for cmd in $required_commands; do
   if ! command_exists "$cmd"; then
     say_error "Command not found: ${cmd}"
     exit 127
+  else
+    say_debug "Command found: ${cmd}" success
   fi
 done
 
@@ -332,14 +352,22 @@ check_rclone_version
 
 
 # Check if rclone config exists
+say_debug "Checking if rclone configuration file exists..."
 if [ ! -f "$rclone_config" ]; then
-  say_error "Rclone configuration not found: ${rclone_config}."
+  say_error "Rclone configuration not found: ${rclone_config}"
   exit 1
-  # Check if rclone remote has any issues
-  elif ! rclone about "$rclone_destination" > /dev/null 2>&1; then
+else
+  say_debug "Using rclone configuration: ${rclone_config}" success
+fi
+
+# Check if rclone remote has any issues
+say_debug "Checking rclone remote for any issues..."
+if ! rclone about "$rclone_destination" > /dev/null 2>&1; then
   say_error "Could not read rclone remote '${rclone_destination}'. See the \`rclone_destination\` setting."
   say_error "If the remote looks correct, check for issues by running: \`rclone about ${rclone_destination}\`"
   exit 1
+else
+  say_debug "Remote exists. No issues found." success
 fi
 
 
@@ -356,7 +384,7 @@ else
   if [ -d "${temp_file_dir%/}" ]; then
     # Temp file directory exists; attempt to create lock file
     if touch "$lock_file"; then
-        say_debug "Creating '${lock_file}' succeeded. Continuing..."
+        say_debug "Creating '${lock_file}' succeeded. Continuing..." success
       else
         say_error "Could not create lock file '${lock_file}'. Exiting..."
         exit 1
@@ -366,9 +394,9 @@ else
     say_debug "Temp file directory '${temp_file_dir%/}' not found. Attempting to create it..."
     if mkdir -p "${temp_file_dir%/}"; then
       # Attempt to create lock file
-      say_debug "Creating '${temp_file_dir%/}' succeeded. Creating lock file..."
+      say_debug "Creating '${temp_file_dir%/}' succeeded. Creating lock file..." success
       if touch "$lock_file"; then
-        say_debug "Creating '${lock_file}' succeeded. Continuing..."
+        say_debug "Creating '${lock_file}' succeeded. Continuing..." success
       else
         say_error "Could not create lock file '${lock_file}'. Exiting..."
         exit 1
@@ -470,7 +498,7 @@ if [ -s "$ytdl_snatch_list" ]; then
       # Process value returned by `get_video_value()`
       if [ "$video_value" != "$ytdl_default_video_value" ]; then
         # Printout example: "'playlist_title' is 'Uploads_from_Some_Channel_Name'"
-        say_debug "'${ytdl_video_value}' is '${video_value}'"
+        say_debug "'${ytdl_video_value}' is '${video_value}'" success
 
         # Trim off 'Uploads_from_' when returning titles of playlists that are just
         # all the videos a user has uploaded
@@ -481,7 +509,7 @@ if [ -s "$ytdl_snatch_list" ]; then
             say_debug "Trimming off '${string_to_trim}' from '${video_value}'..."
             video_value="$(printf %s\\n "$video_value"|sed "s/^${string_to_trim}//")"
             # Printout example: "New 'playlist_title' is 'Channel_Name'"
-            say_debug "New '${ytdl_video_value}' is '${video_value}'"
+            say_debug "New '${ytdl_video_value}' is '${video_value}'" success
           fi
         fi
 
@@ -490,7 +518,7 @@ if [ -s "$ytdl_snatch_list" ]; then
           say_debug "Converting '${video_value}' to lowercase..."
           video_value=$(printf %s\\n "$video_value"|tr '[:upper:]' '[:lower:]')
           # Printout example: "New 'playlist_title' is 'channel_name'
-          say_debug "New '${ytdl_video_value}' is '${video_value}'"
+          say_debug "New '${ytdl_video_value}' is '${video_value}'" success
         fi
       fi
 
