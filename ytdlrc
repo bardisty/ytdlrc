@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Mon Feb 04 2019 20:30:20 PST -0800                              |
+# | modified | Mon Feb 04 2019 20:50:45 PST -0800                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -272,6 +272,21 @@ check_rclone_version() {
 }
 
 
+delete_lock_file() {
+  say_debug "Removing lock file..."
+  if [ -f "$lock_file" ]; then
+    if ! rm "$lock_file"; then
+      say_error "Could not delete lock file: ${lock_file}"
+      exit 1
+    else
+      say_debug "Lock file deleted." success
+    fi
+  else
+    say_error "Lock file doesn't exist: ${lock_file}"
+  fi
+}
+
+
 # Colors for info / error printouts
 if tty > /dev/null 2>&1; then
   if command_exists tput; then
@@ -332,43 +347,7 @@ fi
 
 # Catch CTRL-C; clean up temp files and exit script to prevent further
 # commands from executing
-trap 'rm "$lock_file" && rm "$fifo" && exit 0' 2
-
-
-say_debug "Checking required commands..."
-required_commands="youtube-dl ffmpeg rclone"
-for cmd in $required_commands; do
-  if ! command_exists "$cmd"; then
-    say_error "Command not found: ${cmd}"
-    exit 127
-  else
-    say_debug "Command found: ${cmd}" success
-  fi
-done
-
-
-# Ensure rclone meets minimum required version
-check_rclone_version
-
-
-# Check if rclone config exists
-say_debug "Checking if rclone configuration file exists..."
-if [ ! -f "$rclone_config" ]; then
-  say_error "Rclone configuration not found: ${rclone_config}"
-  exit 1
-else
-  say_debug "Using rclone configuration: ${rclone_config}" success
-fi
-
-# Check if rclone remote has any issues
-say_debug "Checking rclone remote for any issues..."
-if ! rclone about "$rclone_destination" > /dev/null 2>&1; then
-  say_error "Could not read rclone remote '${rclone_destination}'. See the \`rclone_destination\` setting."
-  say_error "If the remote looks correct, check for issues by running: \`rclone about ${rclone_destination}\`"
-  exit 1
-else
-  say_debug "Remote exists. No issues found." success
-fi
+trap 'delete_lock_file && rm "$fifo" && exit 0' 2
 
 
 # Check for existence of lock file
@@ -432,6 +411,49 @@ if [ ! -f "$ytdl_archive_list" ]; then
     say_error "Could not create archive list '${ytdl_archive_list}'. Exiting..."
     exit 1
   fi
+fi
+
+
+if [ ! -s "$ytdl_snatch_list" ]; then
+  say_error "${ytdl_snatch_list} is empty. Exiting..."
+  delete_lock_file
+  exit 1
+fi
+
+
+say_debug "Checking required commands..."
+required_commands="youtube-dl ffmpeg rclone"
+for cmd in $required_commands; do
+  if ! command_exists "$cmd"; then
+    say_error "Command not found: ${cmd}"
+    exit 127
+  else
+    say_debug "Command found: ${cmd}" success
+  fi
+done
+
+
+# Ensure rclone meets minimum required version
+check_rclone_version
+
+
+# Check if rclone config exists
+say_debug "Checking if rclone configuration file exists..."
+if [ ! -f "$rclone_config" ]; then
+  say_error "Rclone configuration not found: ${rclone_config}"
+  exit 1
+else
+  say_debug "Using rclone configuration: ${rclone_config}" success
+fi
+
+# Check if rclone remote has any issues
+say_debug "Checking rclone remote for any issues..."
+if ! rclone about "$rclone_destination" > /dev/null 2>&1; then
+  say_error "Could not read rclone remote '${rclone_destination}'. See the \`rclone_destination\` setting."
+  say_error "If the remote looks correct, check for issues by running: \`rclone about ${rclone_destination}\`"
+  exit 1
+else
+  say_debug "Remote exists. No issues found." success
 fi
 
 
@@ -551,6 +573,6 @@ if [ -s "$ytdl_snatch_list" ]; then
   rm "$fifo"
 fi
 
-say "Process complete. Removing lock file."
-rm "$lock_file"
+say "Process completed at $(date --iso-8601=seconds)."
+delete_lock_file
 
