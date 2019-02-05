@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Mon Feb 04 2019 20:50:45 PST -0800                              |
+# | modified | Mon Feb 04 2019 21:03:19 PST -0800                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -358,7 +358,7 @@ if [ -f "$lock_file" ]; then
   exit 0
 else
   # Lock file doesn't exist; create it
-  say_debug "Lock file doesn't exist. Attempting to create ${lock_file}..."
+  say_debug "Lock file doesn't exist. Attempting to create '${lock_file}'..."
   # Check if temp file directory exists
   if [ -d "${temp_file_dir%/}" ]; then
     # Temp file directory exists; attempt to create lock file
