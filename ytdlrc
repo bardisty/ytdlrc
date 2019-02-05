@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Mon Feb 04 2019 21:03:19 PST -0800                              |
+# | modified | Mon Feb 04 2019 21:07:34 PST -0800                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -242,6 +242,7 @@ check_rclone_version() {
 
   if ! command_exists awk; then
     say_error "Command not found: awk"
+    delete_lock_file
     exit 127
   fi
 
@@ -265,6 +266,7 @@ check_rclone_version() {
     say_error "Rclone does not meet minimum required version."
     say_error "Installed version: ${rclone_version}"
     say_error "Minimum required version: ${minimum_required_version}"
+    delete_lock_file
     exit 1
   else
     say_debug "Installed version: ${rclone_version}" success
@@ -393,6 +395,7 @@ if [ ! -d "${ytdl_download_dir%/}" ]; then
   say "Creating download directory: ${ytdl_download_dir%/}"
   if ! mkdir -p "${ytdl_download_dir%/}"; then
     say_error "Could not create download directory '${ytdl_download_dir%/}'. Exiting..."
+    delete_lock_file
     exit 1
   fi
 fi
@@ -401,6 +404,7 @@ if [ ! -f "$ytdl_snatch_list" ]; then
   say "Creating snatch list: ${ytdl_snatch_list}"
   if ! touch "$ytdl_snatch_list"; then
     say_error "Could not create snatch list '${ytdl_snatch_list}'. Exiting..."
+    delete_lock_file
     exit 1
   fi
 fi
@@ -409,6 +413,7 @@ if [ ! -f "$ytdl_archive_list" ]; then
   say "Creating archive list: ${ytdl_archive_list}"
   if ! touch "$ytdl_archive_list"; then
     say_error "Could not create archive list '${ytdl_archive_list}'. Exiting..."
+    delete_lock_file
     exit 1
   fi
 fi
@@ -426,6 +431,7 @@ required_commands="youtube-dl ffmpeg rclone"
 for cmd in $required_commands; do
   if ! command_exists "$cmd"; then
     say_error "Command not found: ${cmd}"
+    delete_lock_file
     exit 127
   else
     say_debug "Command found: ${cmd}" success
@@ -441,6 +447,7 @@ check_rclone_version
 say_debug "Checking if rclone configuration file exists..."
 if [ ! -f "$rclone_config" ]; then
   say_error "Rclone configuration not found: ${rclone_config}"
+  delete_lock_file
   exit 1
 else
   say_debug "Using rclone configuration: ${rclone_config}" success
@@ -451,6 +458,7 @@ say_debug "Checking rclone remote for any issues..."
 if ! rclone about "$rclone_destination" > /dev/null 2>&1; then
   say_error "Could not read rclone remote '${rclone_destination}'. See the \`rclone_destination\` setting."
   say_error "If the remote looks correct, check for issues by running: \`rclone about ${rclone_destination}\`"
+  delete_lock_file
   exit 1
 else
   say_debug "Remote exists. No issues found." success
@@ -463,6 +471,7 @@ if [ "$ytdl_write_metadata_to_xattrs" = true ]; then
   if ! command_exists attr; then
     say_error "Command not found: attr"
     say_error "Please install the \`attr\` package or set \`ytdl_write_metadata_to_xattrs\` to \`false\`."
+    delete_lock_file
     exit 127
   fi
 
@@ -472,6 +481,7 @@ if [ "$ytdl_write_metadata_to_xattrs" = true ]; then
       say_error "Extended attributes not supported."
       say_error "Please set \`ytdl_write_metadata_to_xattrs\` to \`false\`."
       rm "$xattr_test_file"
+      delete_lock_file
       exit 1
     else
       ytdl_xattrs_flag="--xattrs"
@@ -480,6 +490,7 @@ if [ "$ytdl_write_metadata_to_xattrs" = true ]; then
   else
     say_error "Could not create xattrs test file. Does ${ytdl_download_dir%/} exist?"
     say_error "You can bypass this by setting \`ytdl_write_metadata_to_xattrs\` to \`false\`."
+    delete_lock_file
     exit 1
   fi
 
