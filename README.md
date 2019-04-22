@@ -1,5 +1,9 @@
 # ytdlrc
 
+[![Codacy grade](https://img.shields.io/codacy/grade/fb1e5b8b80374c15b05877cf2bebfd31.svg)](https://www.codacy.com/app/bardisty/ytdlrc?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=bardisty/ytdlrc&amp;utm_campaign=Badge_Grade)
+![GitHub file size in bytes](https://img.shields.io/github/size/bardisty/ytdlrc/ytdlrc.svg)
+[![GitHub](https://img.shields.io/github/license/bardisty/ytdlrc.svg?color=blue)](https://github.com/bardisty/ytdlrc/blob/master/LICENSE)
+
 > Downloads videos and metadata with `youtube-dl` and moves each file on
 > completion to an `rclone` remote
 
