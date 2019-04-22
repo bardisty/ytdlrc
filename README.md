@@ -115,7 +115,7 @@ These examples are what you see with `debug=true`.
 
 #### First run
 
-```
+```text
 [YTDLRC] Lock file doesn't exist. Attempting to create /tmp/ytdlrc.lock...
 [YTDLRC] Creating '/tmp/ytdlrc.lock' succeeded. Continuing...
 [YTDLRC] Processing ytuser:kurzgesagt...
@@ -530,7 +530,7 @@ uploads.
 7.  *(Optional)* Commit your configuration changes so you can easily remain
     updated with the upstream version of the script:
 
-    ```
+    ```shell
     git add ytdlrc
     git commit -m "Modify options to my taste"
     ```
