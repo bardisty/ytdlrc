@@ -14,7 +14,7 @@
 # |     desc | Downloads files via `youtube-dl` and moves them via `rclone`    |
 # |   author | bardisty <b@bah.im>                                             |
 # |   source | https://github.com/bardisty/ytdlrc                              |
-# | modified | Mon Feb 04 2019 21:07:34 PST -0800                              |
+# | modified | Mon Apr 22 2019 16:59:07 PDT -0700                              |
 # `----------------------------------------------------------------------------'
 
 
@@ -202,6 +202,7 @@ get_video_value() {
 
 
 download_all_the_things() {
+  # shellcheck disable=SC2086
   youtube-dl \
     --force-ipv4 \
     --continue \
@@ -565,6 +566,7 @@ if [ -s "$ytdl_snatch_list" ]; then
       download_directory="${ytdl_download_dir%/}/${video_value}"
       if [ -d "$download_directory" ]; then
         say_debug "Uploading metadata to rclone remote..."
+        # shellcheck disable=SC2086
         rclone "$rclone_command" "$download_directory" \
           "${rclone_destination%/}/${video_value}" --config "$rclone_config" \
           $rclone_flags $rclone_debug_flags
