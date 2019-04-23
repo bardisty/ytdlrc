@@ -4,9 +4,6 @@
 ![GitHub file size in bytes](https://img.shields.io/github/size/bardisty/ytdlrc/ytdlrc.svg)
 [![GitHub](https://img.shields.io/github/license/bardisty/ytdlrc.svg?color=blue)](https://github.com/bardisty/ytdlrc/blob/master/LICENSE)
 
-> Downloads videos and metadata with `youtube-dl` and moves each file on
-> completion to an `rclone` remote
-
 `ytdlrc` is a simple shell script wrapper for `youtube-dl` and `rclone`. It
 downloads videos and metadata via `youtube-dl` and moves each file on
 completion to an `rclone` remote, e.g. Google Drive.
